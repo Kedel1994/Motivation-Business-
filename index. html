@@ -1,1 +1,45 @@
-
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Motivation Business</title>
+<style>
+body{margin:0;background:#0a0a06;color:#fff;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column}
+.logo{width:90px;height:90px;background:#fff;border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+h1{color:#e8a900;font-size:22px;margin:0 0 6px}
+p{color:#9e9e7a;font-size:12px;margin:0 0 24px}
+.spin{width:36px;height:36px;border:3px solid rgba(232,169,0,.2);border-top-color:#e8a900;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="logo">
+<svg width="72" height="72" viewBox="0 0 100 100">
+<defs>
+<linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1976D2"/><stop offset="100%" stop-color="#0D47A1"/></linearGradient>
+<linearGradient id="g" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#B8850A"/><stop offset="100%" stop-color="#F0C040"/></linearGradient>
+</defs>
+<rect x="8" y="52" width="11" height="30" rx="2" fill="url(#b)"/>
+<rect x="22" y="40" width="11" height="42" rx="2" fill="url(#b)"/>
+<rect x="36" y="28" width="11" height="54" rx="2" fill="url(#b)"/>
+<path d="M30 65Q55 20 85 12" stroke="url(#b)" stroke-width="5" fill="none" stroke-linecap="round"/>
+<polygon points="85,5 92,18 78,16" fill="#1976D2"/>
+<circle cx="58" cy="22" r="8" fill="url(#g)"/>
+<path d="M45 50Q58 35 71 50" stroke="url(#g)" stroke-width="5" fill="none" stroke-linecap="round"/>
+<polygon points="85,5 87,11 93,11 88,15 90,21 85,17 80,21 82,15 77,11 83,11" fill="#F0C040"/>
+<rect x="50" y="68" width="8" height="14" rx="1" fill="url(#g)"/>
+<rect x="61" y="62" width="8" height="20" rx="1" fill="url(#g)"/>
+<rect x="72" y="56" width="8" height="26" rx="1" fill="url(#g)"/>
+</svg>
+</div>
+<h1>Motivation Business</h1>
+<p>Chargement du système...</p>
+<div class="spin"></div>
+<script>
+setTimeout(function(){
+window.location.href="https://business-motivation.netlify.app";
+},2000);
+</script>
+</body>
+</html>
