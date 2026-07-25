@@ -6,9 +6,9 @@
 <title>Motivation Business Plus</title>
 
 <!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js" defer></script>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -616,27 +616,51 @@ function showPortalDashboard(type,user){
 }
 
 // ===== DÉTECTION PORTAIL AU CHARGEMENT =====
-window.addEventListener("load",function(){
+// ===== CHARGEMENT GARANTI (indépendant de Firebase) =====
+function startApp(){
   var params=new URLSearchParams(window.location.search);
   var portail=params.get("portail");
-  
-  // Init Firebase en arrière-plan (sans bloquer l'interface)
-  try{ initFirebase(); } catch(e){ console.log("Firebase init:",e); }
+  var spEl=g("spStatus");
   
   if(portail==="client"||portail==="actionnaire"){
-    g("spStatus").textContent="Chargement de votre espace...";
-    setTimeout(function(){
-      g("splash").classList.add("hide");
-      setTimeout(function(){ initPortal(portail); },500);
-    },2000);
+    if(spEl)spEl.textContent="Chargement de votre espace...";
   } else {
-    g("spStatus").textContent="Connexion au serveur...";
-    setTimeout(function(){
-      g("splash").classList.add("hide");
-      setTimeout(function(){ g("login").classList.add("show"); },500);
-    },2000);
+    if(spEl)spEl.textContent="Prêt !";
   }
-});
+
+  // Cacher le splash après 1.8 secondes — GARANTI
+  setTimeout(function(){
+    var splash=g("splash");
+    if(splash){splash.style.opacity="0";splash.style.pointerEvents="none";}
+    setTimeout(function(){
+      if(portail==="client"||portail==="actionnaire"){
+        initPortal(portail);
+      } else {
+        var login=g("login");
+        if(login)login.classList.add("show");
+      }
+    },400);
+  },1800);
+
+  // Firebase en arrière-plan — ne bloque jamais l'interface
+  setTimeout(function(){
+    try{
+      if(typeof firebase!=="undefined"){
+        initFirebase();
+      } else {
+        console.log("Firebase SDK pas encore chargé, mode local actif");
+        loadLocal();
+      }
+    } catch(e){ console.log("Firebase err:",e); loadLocal(); }
+  },500);
+}
+
+// Démarrer dès que le DOM est prêt
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded",startApp);
+} else {
+  startApp();
+}
 
 
 // ===== LOGIN =====
