@@ -139,6 +139,36 @@ tr:nth-child(even) td{background:rgba(255,255,255,.015)}
   <div class="sp-status" id="spStatus">Connexion au serveur...</div>
 </div>
 
+
+<!-- Script indépendant — cache le splash TOUJOURS après 2 secondes -->
+<script>
+(function(){
+  function hideSplash(){
+    var s=document.getElementById('splash');
+    if(!s)return;
+    s.style.transition='opacity 0.5s ease';
+    s.style.opacity='0';
+    s.style.pointerEvents='none';
+    setTimeout(function(){
+      s.style.display='none';
+      // Portail ou login normal
+      var q=window.location.search||"";
+      if(q.indexOf('portail=client')!==-1||q.indexOf('portail=actionnaire')!==-1){
+        // Le portail sera géré par le script principal
+        if(typeof initPortal==='function'){
+          var p=new URLSearchParams(q).get('portail');
+          initPortal(p);
+        }
+      } else {
+        var l=document.getElementById('login');
+        if(l){l.style.display='flex';}
+      }
+    },500);
+  }
+  // Lancer après 2 secondes — GARANTI
+  setTimeout(hideSplash, 2000);
+})();
+</script>
 <!-- LOGIN -->
 <div id="login">
   <div class="lcard">
@@ -655,11 +685,17 @@ function startApp(){
   },500);
 }
 
-// Démarrer dès que le DOM est prêt
+// Firebase init au chargement
 if(document.readyState==="loading"){
-  document.addEventListener("DOMContentLoaded",startApp);
+  document.addEventListener("DOMContentLoaded",function(){
+    setTimeout(function(){
+      try{if(typeof firebase!=="undefined")initFirebase();}catch(e){loadLocal();}
+    },300);
+  });
 } else {
-  startApp();
+  setTimeout(function(){
+    try{if(typeof firebase!=="undefined")initFirebase();}catch(e){loadLocal();}
+  },300);
 }
 
 
