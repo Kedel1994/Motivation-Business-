@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>Motivation Business Plus</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Trebuchet MS',system-ui,sans-serif;background:linear-gradient(145deg,#060E1A,#0D1B2A,#111E30);color:#fff;min-height:100vh}
+input,select,button{font-family:inherit}
+select option{background:#1A2E45;color:#fff}
+#splash{position:fixed;inset:0;background:linear-gradient(145deg,#060E1A,#0D1B2A);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}
+.sp-logo{width:120px;height:120px;background:#fff;border-radius:28px;display:flex;align-items:center;justify-content:center;box-shadow:0 20px 60px rgba(212,160,23,.4);margin-bottom:20px;animation:pp 2s ease-in-out infinite}
+@keyframes pp{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.sp-t{font-size:24px;font-weight:900;color:#F5C842;margin-bottom:4px;text-align:center}
+.sp-s{font-size:10px;color:#4A6580;letter-spacing:3px;text-transform:uppercase;margin-bottom:28px}
+.sp-bar{width:220px;height:3px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
+.sp-p{height:100%;background:linear-gradient(90deg,#8B6914,#F5C842);border-radius:99px;animation:pg 1.8s ease forwards}
+@keyframes pg{from{width:0}to{width:100%}}
+#login{display:none;min-height:100vh;align-items:center;justify-content:center;padding:20px}
+.lcard{background:rgba(255,255,255,.03);border:1px solid rgba(212,160,23,.2);border-radius:24px;padding:36px 28px;width:100%;max-width:380px;position:relative}
+.lcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#F5C842,transparent);border-radius:24px 24px 0 0}
+.llogo{width:90px;height:90px;background:#fff;border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 8px 32px rgba(212,160,23,.25)}
+.lt{font-size:21px;font-weight:900;color:#F5C842;text-align:center;margin-bottom:3px}
+.ls{font-size:9px;color:#4A6580;letter-spacing:2px;text-transform:uppercase;text-align:center;margin-bottom:26px}
+.lf{margin-bottom:14px}
+.ll{font-size:9px;color:#D4A017;font-weight:700;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:5px}
+.lrw{display:flex;gap:8px}
+.li{width:100%;background:rgba(255,255,255,.05);border:1.5px solid rgba(212,160,23,.2);border-radius:11px;padding:13px 14px;color:#fff;font-size:14px;outline:none}
+.li:focus{border-color:#F5C842}
+.eyb{background:rgba(255,255,255,.05);border:1.5px solid rgba(212,160,23,.2);border-radius:10px;color:#4A6580;cursor:pointer;padding:13px;font-size:14px}
+.lerr{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:9px;padding:10px 14px;color:#FCA5A5;font-size:12px;font-weight:600;display:none;margin-bottom:12px;text-align:center}
+.lbtn{width:100%;background:linear-gradient(135deg,#D4A017,#F5C842);border:none;border-radius:12px;padding:15px;color:#0D1B2A;font-weight:900;font-size:15px;cursor:pointer;margin-bottom:12px}
+.lbtn:active{opacity:.85}
+.lft{font-size:9px;color:#2A4060;text-align:center;line-height:1.6}
+#app{display:none;min-height:100vh}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(6,14,26,.92);backdrop-filter:blur(16px);border-bottom:1px solid rgba(212,160,23,.15);padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+.tlogo{width:34px;height:34px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.mbtn{background:none;border:none;color:#F5C842;font-size:22px;cursor:pointer;line-height:1;padding:2px}
+.topname{font-size:10px;font-weight:700;color:#F5C842}
+.logoutbtn{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);border-radius:6px;color:#FCA5A5;font-size:9px;cursor:pointer;padding:2px 7px;font-weight:700}
+.sdot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:5px;vertical-align:middle;background:#EF4444}
+.sdot.on{background:#22C55E;animation:blink 2s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.overlay{position:fixed;inset:0;z-index:200;display:none}
+.overlay.on{display:flex}
+.drawer{width:235px;background:linear-gradient(180deg,#060E1A,#0D1B2A);border-right:1px solid rgba(212,160,23,.15);display:flex;flex-direction:column;overflow-y:auto}
+.dhead{padding:20px 14px 14px;border-bottom:1px solid rgba(212,160,23,.1);text-align:center}
+.dlogobox{width:80px;height:80px;background:#fff;border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
+.dname{font-size:13px;font-weight:900;color:#F5C842}
+.dsub{font-size:9px;color:#2A4060;letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.dnav{flex:1;padding:8px 6px}
+.nb{width:100%;display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:10px;margin-bottom:2px;background:transparent;border:1px solid transparent;color:#3A5068;font-size:12px;cursor:pointer;text-align:left;font-weight:400}
+.nb.on{background:rgba(212,160,23,.12);border-color:rgba(212,160,23,.22);color:#F5C842;font-weight:700}
+.dfoot{margin:8px;padding:10px;border-radius:10px;background:rgba(212,160,23,.04);border:1px solid rgba(212,160,23,.1)}
+.dbg{flex:1;background:rgba(0,0,0,.6)}
+.pg{padding:64px 14px 30px;max-width:880px;margin:0 auto}
+.sth{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid rgba(212,160,23,.15)}
+.sth h2{margin:0;font-size:15px;font-weight:800;color:#F5C842}
+.s2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.s4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.card{background:rgba(255,255,255,.03);border:1px solid rgba(212,160,23,.12);border-radius:14px;padding:14px 16px}
+.sc{background:rgba(255,255,255,.03);border-radius:13px;padding:13px 16px;position:relative;overflow:hidden}
+.tw{overflow-x:auto;border-radius:12px;border:1px solid rgba(212,160,23,.12)}
+table{width:100%;border-collapse:collapse;font-size:11px}
+thead tr{background:rgba(212,160,23,.07)}
+th{padding:9px 11px;text-align:left;color:#D4A017;font-weight:700;font-size:9px;letter-spacing:.8px;text-transform:uppercase;white-space:nowrap}
+td{padding:9px 11px;color:#C5D8E8;white-space:nowrap;border-top:1px solid rgba(255,255,255,.03)}
+tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+.inp{width:100%;padding:9px 11px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(212,160,23,.18);color:#fff;font-size:12px;outline:none;box-sizing:border-box}
+.inp:focus{border-color:#F5C842}
+.ilbl{font-size:9px;color:#D4A017;font-weight:700;letter-spacing:.8px;text-transform:uppercase;display:block;margin-bottom:4px}
+.ig{margin-bottom:11px}
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:flex;align-items:center;justify-content:center;padding:12px}
+.mc{background:linear-gradient(145deg,#0D1B2A,#111E30);border:1px solid rgba(212,160,23,.2);border-radius:18px;width:100%;max-width:500px;max-height:88vh;overflow-y:auto;padding:22px;position:relative}
+.mc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#F5C842,transparent);border-radius:18px 18px 0 0}
+.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.mh h2{margin:0;color:#F5C842;font-size:15px;font-weight:800}
+.cb{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:9px;padding:11px;margin-top:8px;font-size:11px;color:#86EFAC}
+.secth{font-size:9px;font-weight:800;color:#D4A017;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:11px;padding-bottom:7px;border-bottom:1px solid rgba(212,160,23,.15)}
+.frow{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.btn{border:none;border-radius:9px;padding:8px 16px;font-weight:700;font-size:11px;cursor:pointer}
+.btn:active{opacity:.8}
+.bg{background:linear-gradient(135deg,#D4A017,#F5C842);color:#0D1B2A}
+.br{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25)!important;color:#FCA5A5}
+.be{background:linear-gradient(135deg,#D4A017,#F5C842);border:none;border-radius:7px;padding:3px 9px;color:#0D1B2A;font-weight:700;font-size:10px;cursor:pointer}
+.bd{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);border-radius:7px;padding:3px 9px;color:#FCA5A5;font-weight:700;font-size:10px;cursor:pointer}
+.nc{color:#F5C842;font-weight:700;font-family:'Courier New',monospace;font-size:10px}
+.em{color:#2A4060;text-align:center;padding:28px;font-size:12px;font-style:italic}
+.ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:9px;padding:10px 14px;color:#86EFAC;font-weight:700;font-size:11px;margin-bottom:14px;display:none}
+.info{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.18);border-radius:8px;padding:9px;font-size:11px;color:#86EFAC;margin-top:5px}
+.fld{border-radius:11px;padding:11px 14px;margin-bottom:9px;background:rgba(255,255,255,.03);border:1px solid rgba(212,160,23,.14)}
+.bdg{border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;display:inline-block}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(13,27,42,.95);border:1px solid rgba(212,160,23,.3);border-radius:12px;padding:12px 20px;font-size:12px;font-weight:600;color:#C5D8E8;z-index:9999;display:none;white-space:nowrap}
+.toast.on{display:block}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div id="splash">
+  <div class="sp-logo" id="spLogo"></div>
+  <div class="sp-t">Motivation Business Plus</div>
+  <div class="sp-s">Inspire &bull; Achieve &bull; Succeed</div>
+  <div class="sp-bar"><div class="sp-p"></div></div>
+  <div style="font-size:11px;color:#4A6580;margin-top:14px" id="spSt">Chargement...</div>
+</div>
+<div id="login">
+  <div class="lcard">
+    <div class="llogo" id="lLogo"></div>
+    <div class="lt">Motivation Business Plus</div>
+    <div class="ls">Syst&egrave;me de gestion financi&egrave;re</div>
+    <div class="lf"><label class="ll">&#128100; Identifiant</label><input class="li" id="lu" type="text" value="admin" placeholder="Identifiant"/></div>
+    <div class="lf"><label class="ll">&#128274; Mot de passe</label>
+      <div class="lrw"><input class="li" id="lp" type="password" placeholder="Mot de passe"/>
+      <button class="eyb" onclick="var e=document.getElementById('lp');e.type=e.type==='password'?'text':'password'">&#128065;</button></div></div>
+    <div class="lerr" id="lerr">&#10060; Identifiant ou mot de passe incorrect</div>
+    <button class="lbtn" onclick="doLogin()">&#128273; Se connecter</button>
+    <div class="lft">Motivation Business Plus &copy; 2026</div>
+  </div>
+</div>
+<div id="app">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:9px">
+      <button class="mbtn" onclick="document.getElementById('ov').classList.toggle('on')">&#9776;</button>
+      <div class="tlogo" id="tLogo"></div>
+      <div>
+        <div style="font-size:11px;font-weight:800;color:#F5C842;line-height:1.1" id="tname">MB Plus</div>
+        <div style="font-size:9px;color:#3A5068" id="tpage">&#128202; Tableau de bord <span class="sdot" id="sdot"></span></div>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div class="topname" id="tuser">Admin</div>
+      <button class="logoutbtn" onclick="doLogout()">&#128682; Sortir</button>
+    </div>
+  </div>
+  <div class="overlay" id="ov">
+    <div class="drawer">
+      <div class="dhead">
+        <div class="dlogobox" id="dLogo"></div>
+        <div class="dname" id="dname">Motivation Business Plus</div>
+        <div class="dsub">Inspire &bull; Achieve &bull; Succeed</div>
+      </div>
+      <div class="dnav" id="nav"></div>
+      <div class="dfoot">
+        <div style="font-size:11px;font-weight:700;color:#F5C842" id="duser">Kedel Toussaint</div>
+        <div style="font-size:10px;color:#3A5068;margin-top:1px" id="demail">admin@motivationbusiness.com</div>
+      </div>
+    </div>
+    <div class="dbg" onclick="document.getElementById('ov').classList.remove('on')"></div>
+  </div>
+  <div class="pg" id="pg"></div>
+</div>
+<script>
+var SVG='<svg width="%s" height="%s" viewBox="0 0 100 100"><defs><linearGradient id="gb" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1976D2"/><stop offset="100%" stop-color="#0D47A1"/></linearGradient><linearGradient id="gg" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#8B6914"/><stop offset="100%" stop-color="#F5C842"/></linearGradient></defs><rect x="8" y="52" width="11" height="30" rx="2" fill="url(#gb)"/><rect x="22" y="40" width="11" height="42" rx="2" fill="url(#gb)"/><rect x="36" y="28" width="11" height="54" rx="2" fill="url(#gb)"/><path d="M30 65Q55 20 85 12" stroke="url(#gb)" stroke-width="5" fill="none" stroke-linecap="round"/><polygon points="85,5 92,18 78,16" fill="#1976D2"/><circle cx="58" cy="22" r="8" fill="url(#gg)"/><path d="M45 50Q58 35 71 50" stroke="url(#gg)" stroke-width="5" fill="none" stroke-linecap="round"/><polygon points="85,5 87,11 93,11 88,15 90,21 85,17 80,21 82,15 77,11 83,11" fill="#F5C842"/><rect x="50" y="68" width="8" height="14" rx="1" fill="url(#gg)" opacity=".8"/><rect x="61" y="62" width="8" height="20" rx="1" fill="url(#gg)"/><rect x="72" y="56" width="8" height="26" rx="1" fill="url(#gg)"/></svg>';
+function svg(s){return SVG.replace(/%s/g,s);}
+document.getElementById('spLogo').innerHTML=svg(90);
+document.getElementById('lLogo').innerHTML=svg(70);
+document.getElementById('tLogo').innerHTML=svg(24);
+document.getElementById('dLogo').innerHTML=svg(62);
+
+var DB={
+  s:{sys:"Motivation Business Plus",user:"Kedel Toussaint",email:"admin@motivationbusiness.com",tel:"+509 3700-0000",devise:"USD ($)",pays:"Haiti",entreprise:"Motivation Business Plus",site:"motivationbusiness.com",slogan:"Inspire - Achieve - Succeed",adresse:"Port-au-Prince, Haiti",pen:"2",res:"20",pwd:"admin123",uid:"admin"},
+  clients:[],comptes:[],depots:[],retraits:[],prets:[],rembours:[],terme:[],act:[],
+  users:[{id:"U1",nom:"Toussaint",prenom:"Kedel",email:"admin@motivationbusiness.com",role:"Administrateur",pwd:"admin123",uid:"admin",statut:"1",dc:td()}]
+};
+var CP="dashboard",fbDB=null,isOnline=false;
+var TX={"3":5,"6":8,"12":10,"24":12};
+var NV=[{id:"dashboard",ic:"d",lb:"Tableau de bord"},{id:"clients",ic:"p",lb:"Clients"},{id:"comptes",ic:"b",lb:"Comptes"},{id:"depots",ic:"v",lb:"Depots"},{id:"retraits",ic:"^",lb:"Retraits"},{id:"prets",ic:"c",lb:"Prets"},{id:"rembours",ic:"$",lb:"Remboursements"},{id:"terme",ic:"t",lb:"Depots a terme"},{id:"act",ic:"a",lb:"Actionnaires"},{id:"tres",ic:"w",lb:"Tresorerie"},{id:"rapports",ic:"r",lb:"Rapports"},{id:"users",ic:"k",lb:"Utilisateurs"},{id:"portail",ic:"L",lb:"Portail Client"},{id:"settings",ic:"g",lb:"Parametres"}];
+var NVI=[{id:"dashboard",ic:"&#128202;",lb:"Tableau de bord"},{id:"clients",ic:"&#128101;",lb:"Clients"},{id:"comptes",ic:"&#127970;",lb:"Comptes"},{id:"depots",ic:"&#11015;&#65039;",lb:"D&eacute;p&ocirc;ts"},{id:"retraits",ic:"&#11014;&#65039;",lb:"Retraits"},{id:"prets",ic:"&#128203;",lb:"Pr&ecirc;ts"},{id:"rembours",ic:"&#128179;",lb:"Remboursements"},{id:"terme",ic:"&#128274;",lb:"D&eacute;p&ocirc;ts &agrave; terme"},{id:"act",ic:"&#127963;&#65039;",lb:"Actionnaires"},{id:"tres",ic:"&#128167;",lb:"Tr&eacute;sorerie"},{id:"rapports",ic:"&#128200;",lb:"Rapports"},{id:"users",ic:"&#128273;",lb:"Utilisateurs"},{id:"portail",ic:"&#128279;",lb:"Portail Client"},{id:"settings",ic:"&#9881;&#65039;",lb:"Param&egrave;tres"}];
+
+function uid_(){return Date.now().toString(36).toUpperCase()+Math.random().toString(36).slice(2,5).toUpperCase();}
+function td(){return new Date().toISOString().slice(0,10);}
+function fm(n){return Number(n||0).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fd(d){return d?new Date(d).toLocaleDateString("fr-FR"):"--";}
+function gnc(){return"MB-"+Math.floor(Math.random()*9000+1000)+"-"+Math.floor(Math.random()*90+10);}
+function g(id){return document.getElementById(id);}
+function esc(s){return(s||"").toString().replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");}
+function bdg(v){var m={actif:"#22C55E","en cours":"#3B82F6","solde":"#22C55E",retard:"#EF4444",inactif:"#EF4444","echu":"#F97316","renouvele":"#8B5CF6","ferme":"#EF4444"};var c=m[(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")]||"#6B7280";return'<span class="bdg" style="background:'+c+'22;color:'+c+';border:1px solid '+c+'44">'+v+'</span>';}
+function showToast(msg,col){var t=g("toast");t.textContent=msg;t.style.color=col||"#C5D8E8";t.classList.add("on");setTimeout(function(){t.classList.remove("on");},3000);}
+function setOnline(v){isOnline=v;var d=g("sdot");if(d){d.className="sdot"+(v?" on":"");}}
+
+function saveLocal(){try{localStorage.setItem("mbp",JSON.stringify(DB));}catch(e){}}
+function loadLocal(){
+  try{var s=localStorage.getItem("mbp");if(!s)return;var p=JSON.parse(s);
+  ["clients","comptes","depots","retraits","prets","rembours","terme","act"].forEach(function(k){if(p[k])DB[k]=p[k];});
+  if(p.users&&p.users.length>0)DB.users=p.users;
+  if(p.s&&p.s.uid)Object.keys(p.s).forEach(function(k){DB.s[k]=p.s[k];});
+  }catch(e){}
+}
+
+var FB_CFG={apiKey:"AIzaSyAfRsc3DsqbP5LPaALTOi91y3Sez0hasQU",authDomain:"motivation-business-21069.firebaseapp.com",databaseURL:"https://motivation-business-21069-default-rtdb.firebaseio.com",projectId:"motivation-business-21069",storageBucket:"motivation-business-21069.firebasestorage.app",messagingSenderId:"280621635847",appId:"1:280621635847:web:9308b9dfc1e7c83bc24da2"};
+function initFB(){
+  try{
+    if(typeof firebase==="undefined")return;
+    if(!firebase.apps||firebase.apps.length===0)firebase.initializeApp(FB_CFG);
+    fbDB=firebase.database();
+    fbDB.ref(".info/connected").on("value",function(s){setOnline(s.val()===true);if(s.val())showToast("Sync actif","#86EFAC");});
+    ["clients","comptes","depots","retraits","prets","rembours","terme","act","users"].forEach(function(col){
+      fbDB.ref("mbp/"+col).on("value",function(snap){
+        var v=snap.val();if(!v)return;var arr=Object.values(v);if(!arr.length)return;
+        DB[col]=arr;saveLocal();if(g("pg")&&g("app").style.display!=="none")render();buildNav();
+      });
+    });
+    fbDB.ref("mbp/s").on("value",function(snap){var v=snap.val();if(!v||!v.uid)return;Object.keys(v).forEach(function(k){DB.s[k]=v[k];});saveLocal();buildNav();});
+  }catch(e){console.log("FB:",e);}
+}
+function fbSave(col){saveLocal();if(!fbDB||!isOnline)return;try{var o={};DB[col].forEach(function(x){if(x.id)o[x.id]=x;});fbDB.ref("mbp/"+col).set(o);}catch(e){}}
+function fbSaveS(){saveLocal();if(!fbDB||!isOnline)return;try{fbDB.ref("mbp/s").set(DB.s);}catch(e){}}
+
+// SPLASH - cache apres 2s garanti
+setTimeout(function(){
+  var sp=g("splash");if(sp){sp.style.opacity="0";sp.style.pointerEvents="none";setTimeout(function(){sp.style.display="none";},500);}
+  var q=window.location.search;
+  if(q.indexOf("portail=client")>-1){loadLocal();showPortalLogin("client");}
+  else if(q.indexOf("portail=actionnaire")>-1){loadLocal();showPortalLogin("actionnaire");}
+  else{var l=g("login");if(l)l.style.display="flex";}
+},2000);
+// Firebase en arriere-plan
+loadLocal();
+setTimeout(function(){try{initFB();}catch(e){}},800);
+
+function doLogin(){
+  var u=(g("lu")||{}).value||"";var p=(g("lp")||{}).value||"";u=u.trim();
+  var ok=false;
+  if(u===DB.s.uid&&p===DB.s.pwd)ok=true;
+  DB.users.forEach(function(x){if(x.uid===u&&x.pwd===p&&x.statut==="1")ok=true;});
+  if(ok){g("lerr").style.display="none";g("login").style.display="none";g("app").style.display="block";buildNav();go("dashboard");}
+  else{g("lerr").style.display="block";g("lp").value="";}
+}
+function doLogout(){if(!confirm("Se deconnecter ?"))return;g("app").style.display="none";g("login").style.display="flex";g("lp").value="";}
+
+function buildNav(){
+  var h="";NVI.forEach(function(n){h+='<
