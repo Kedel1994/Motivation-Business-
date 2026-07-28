@@ -181,6 +181,10 @@ tr:nth-child(even) td{background:rgba(255,255,255,.015)}
     <div class="lf"><label class="ll">🔒 Mot de passe</label><div class="lrw"><input class="li" id="lp" type="password" placeholder="Mot de passe" onkeydown="if(event.key==='Enter')doLogin()"/><button class="eyb" onclick="var e=document.getElementById('lp');e.type=e.type==='password'?'text':'password'">👁</button></div></div>
     <div class="lerr" id="lerr">❌ Identifiant ou mot de passe incorrect</div>
     <button class="lbtn" onclick="doLogin()">🔐 Se connecter</button>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button onclick="goPortal('client')" style="flex:1;background:rgba(25,118,210,.12);border:1px solid rgba(25,118,210,.35);border-radius:12px;color:#7FB3E8;font-size:12px;font-weight:700;cursor:pointer;padding:11px 6px">👥 Espace Client</button>
+      <button onclick="goPortal('actionnaire')" style="flex:1;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.35);border-radius:12px;color:#B79CF0;font-size:12px;font-weight:700;cursor:pointer;padding:11px 6px">🏛️ Espace Actionnaire</button>
+    </div>
     <div class="lft">Motivation Business Plus © 2026 — Données synchronisées en temps réel</div>
   </div>
 </div>
@@ -212,7 +216,7 @@ tr:nth-child(even) td{background:rgba(255,255,255,.015)}
       <div class="dnav" id="nav"></div>
       <div class="dfoot">
         <div style="font-size:11px;font-weight:700;color:var(--or2)" id="duser">Kedel Toussaint</div>
-        <div style="font-size:10px;color:#3A5068;margin-top:1px" id="demail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3150555c585f715c5e4558475045585e5f534442585f5442421f525e5c">[email&#160;protected]</a></div>
+        <div style="font-size:10px;color:#3A5068;margin-top:1px" id="demail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="6b0a0f0602052b06041f021d0a1f020405091e1802050e181845080406">[email&#160;protected]</a></div>
         <div style="font-size:9px;color:#1A3050;margin-top:2px">Administrateur principal</div>
       </div>
     </div>
@@ -505,6 +509,17 @@ function savePwd(){
 function initPortal(type){
   // Hide app, show portal login
   g("splash").classList.add("hide");
+  document.body.insertAdjacentHTML("beforeend",buildPortalLogin(type));
+}
+
+// Ouvre le portail depuis la page de connexion (fonctionne en local ET en ligne,
+// sans dépendre du paramètre ?portail= dans l'adresse).
+function goPortal(type){
+  var lg=g("login");if(lg){lg.classList.remove("show");lg.style.display="none";}
+  var ap=g("app");if(ap){ap.classList.remove("show");ap.style.display="none";}
+  var sp=g("splash");if(sp){sp.style.display="none";}
+  // Retirer un éventuel portail déjà ouvert
+  var old=g("portalLogin");if(old)old.remove();
   document.body.insertAdjacentHTML("beforeend",buildPortalLogin(type));
 }
 
@@ -1084,5 +1099,5 @@ function svFld(k){
 function cnFld(k){if(g("sv_"+k))g("sv_"+k).style.display="flex";if(g("se_"+k))g("se_"+k).style.display="none";}
 function saveAll(){saveS();var ok=g("sok");if(ok){ok.style.display="block";setTimeout(function(){ok.style.display="none";},3000);}buildNav();showToast("✅ Tous les paramètres synchronisés","#86EFAC");}
 </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2245c32190f4077',t:'MTc4NTI0NjcwMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
