@@ -212,7 +212,7 @@ tr:nth-child(even) td{background:rgba(255,255,255,.015)}
       <div class="dnav" id="nav"></div>
       <div class="dfoot">
         <div style="font-size:11px;font-weight:700;color:var(--or2)" id="duser">Kedel Toussaint</div>
-        <div style="font-size:10px;color:#3A5068;margin-top:1px" id="demail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="caabaea7a3a48aa7a5bea3bcabbea3a5a4a8bfb9a3a4afb9b9e4a9a5a7">[email&#160;protected]</a></div>
+        <div style="font-size:10px;color:#3A5068;margin-top:1px" id="demail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3150555c585f715c5e4558475045585e5f534442585f5442421f525e5c">[email&#160;protected]</a></div>
         <div style="font-size:9px;color:#1A3050;margin-top:2px">Administrateur principal</div>
       </div>
     </div>
@@ -296,8 +296,11 @@ function initFirebase(){
       var connected=snap.val()===true;
       setOnline(connected);
       if(connected){
-        g("spStatus").textContent="✅ Connecté — synchronisation active";
+        if(g("spStatus"))g("spStatus").textContent="✅ Connecté — synchronisation active";
         showToast("🟢 Synchronisation en temps réel activée","#86EFAC");
+        // À la (re)connexion, on téléverse les données locales vers le cloud
+        // afin de ne perdre aucun enregistrement créé hors-ligne.
+        setTimeout(pushLocalToFirebase,600);
       } else {
         g("spStatus") && (g("spStatus").textContent="⚠️ Hors ligne — mode local");
         setOnline(false);
@@ -341,7 +344,10 @@ function loadLocal(){
 
 // ===== FIREBASE WRITE =====
 function fbSet(col,data){
-  if(fbDB&&isOnline){
+  // Toujours sauvegarder en local d'abord (garantit la persistance)
+  saveLocal();
+  // Puis pousser vers Firebase si la base est disponible
+  if(fbDB){
     try{
       if(col==="s"){
         fbDB.ref("mbp/s").set(data);
@@ -352,7 +358,27 @@ function fbSet(col,data){
       }
     }catch(e){console.log("Firebase write error",e);}
   }
-  saveLocal();
+}
+
+// Téléverse toutes les données locales vers Firebase (fusion initiale)
+// Lit directement depuis localStorage pour être insensible à l'écrasement
+// éventuel de DB par les listeners temps réel.
+function pushLocalToFirebase(){
+  if(!fbDB)return;
+  try{
+    var raw=localStorage.getItem("mbp");
+    if(!raw)return;
+    var L=JSON.parse(raw);
+    var cols=["clients","comptes","depots","retraits","prets","rembours","terme","act","users"];
+    cols.forEach(function(col){
+      if(L[col] && L[col].length){
+        var obj={};
+        L[col].forEach(function(item,i){obj[item.id||i]=item;});
+        fbDB.ref("mbp/"+col).update(obj);
+      }
+    });
+    if(L.s)fbDB.ref("mbp/s").update(L.s);
+  }catch(e){console.log("push error",e);}
 }
 
 function save(col){fbSet(col,DB[col]);}
@@ -675,11 +701,11 @@ function startApp(){
   // Firebase en arrière-plan — ne bloque jamais l'interface
   setTimeout(function(){
     try{
+      loadLocal();
       if(typeof firebase!=="undefined"){
         initFirebase();
       } else {
         console.log("Firebase SDK pas encore chargé, mode local actif");
-        loadLocal();
       }
     } catch(e){ console.log("Firebase err:",e); loadLocal(); }
   },500);
@@ -688,11 +714,13 @@ function startApp(){
 // Firebase init au chargement
 if(document.readyState==="loading"){
   document.addEventListener("DOMContentLoaded",function(){
+    loadLocal();
     setTimeout(function(){
       try{if(typeof firebase!=="undefined")initFirebase();}catch(e){loadLocal();}
     },300);
   });
 } else {
+  loadLocal();
   setTimeout(function(){
     try{if(typeof firebase!=="undefined")initFirebase();}catch(e){loadLocal();}
   },300);
