@@ -161,7 +161,7 @@ tr:nth-child(even) td{background:rgba(255,255,255,.015)}
         }
       } else {
         var l=document.getElementById('login');
-        if(l){l.style.display='flex';}
+        if(l){l.classList.add('show');l.style.display='flex';}
       }
     },500);
   }
@@ -212,7 +212,7 @@ tr:nth-child(even) td{background:rgba(255,255,255,.015)}
       <div class="dnav" id="nav"></div>
       <div class="dfoot">
         <div style="font-size:11px;font-weight:700;color:var(--or2)" id="duser">Kedel Toussaint</div>
-        <div style="font-size:10px;color:#3A5068;margin-top:1px" id="demail">admin@motivationbusiness.com</div>
+        <div style="font-size:10px;color:#3A5068;margin-top:1px" id="demail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="caabaea7a3a48aa7a5bea3bcabbea3a5a4a8bfb9a3a4afb9b9e4a9a5a7">[email&#160;protected]</a></div>
         <div style="font-size:9px;color:#1A3050;margin-top:2px">Administrateur principal</div>
       </div>
     </div>
@@ -221,7 +221,7 @@ tr:nth-child(even) td{background:rgba(255,255,255,.015)}
   <div class="pg" id="pg"></div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ===== FIREBASE CONFIG =====
 const firebaseConfig = {
   apiKey: "AIzaSyAfRsc3DsqbP5LPaALTOi91y3Sez0hasQU",
@@ -401,10 +401,10 @@ function rPortail(){
   h+='<div style="font-size:12px;font-weight:800;color:var(--or2);margin-bottom:12px">🌐 Liens à partager</div>';
   h+='<div style="margin-bottom:12px"><div style="font-size:10px;color:var(--or);font-weight:700;margin-bottom:5px">👥 LIEN PORTAIL CLIENT</div>';
   h+='<div style="display:flex;gap:8px;align-items:center"><div style="background:rgba(255,255,255,.04);border:1px solid rgba(212,160,23,.18);border-radius:8px;padding:9px 12px;font-size:11px;color:#C5D8E8;flex:1;font-family:monospace;word-break:break-all">'+linkClient+'</div>';
-  h+='<button class="btn bg" onclick="copyLink(''+linkClient+'')" style="flex-shrink:0">📋 Copier</button></div></div>';
+  h+='<button class="btn bg" onclick="copyLink(\''+linkClient+'\')" style="flex-shrink:0">📋 Copier</button></div></div>';
   h+='<div><div style="font-size:10px;color:var(--or);font-weight:700;margin-bottom:5px">🏛️ LIEN PORTAIL ACTIONNAIRE</div>';
   h+='<div style="display:flex;gap:8px;align-items:center"><div style="background:rgba(255,255,255,.04);border:1px solid rgba(212,160,23,.18);border-radius:8px;padding:9px 12px;font-size:11px;color:#C5D8E8;flex:1;font-family:monospace;word-break:break-all">'+linkAct+'</div>';
-  h+='<button class="btn bg" onclick="copyLink(''+linkAct+'')" style="flex-shrink:0">📋 Copier</button></div></div></div>';
+  h+='<button class="btn bg" onclick="copyLink(\''+linkAct+'\')" style="flex-shrink:0">📋 Copier</button></div></div></div>';
 
   // Info box
   h+='<div class="info" style="margin-bottom:14px">ℹ️ Partagez ces liens avec vos clients et actionnaires. Chaque client se connecte avec son numéro de compte et son mot de passe. Les actionnaires utilisent leur nom et mot de passe.</div>';
@@ -454,7 +454,7 @@ function setPwd(i){
 function setActPwd(i){
   var a=DB.act[i];
   openM("🔒 Mot de passe — "+a.nom,
-    '<div class="info" style="margin-bottom:10px">L'actionnaire utilisera son nom + ce mot de passe pour se connecter.</div>'+
+    '<div class="info" style="margin-bottom:10px">L\'actionnaire utilisera son nom + ce mot de passe pour se connecter.</div>'+
     igrp("Nouveau mot de passe","npwd",a.apwd||"","",null,true),
     "saveActPwd_"+i);
   window._pwdIdx=i;window._pwdType="act";
@@ -494,9 +494,9 @@ function buildPortalLogin(type){
   '<div style="margin-bottom:12px"><label style="font-size:9px;color:#D4A017;font-weight:700;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px">'+(isClient?"🏦 Numéro de compte":"👤 Votre nom")+'</label>'+
   '<input id="puid" class="li" type="text" placeholder="'+(isClient?"Ex: MB-1234-56":"Votre nom complet")+'"/></div>'+
   '<div style="margin-bottom:16px"><label style="font-size:9px;color:#D4A017;font-weight:700;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px">🔒 Mot de passe</label>'+
-  '<div style="display:flex;gap:8px"><input id="ppwd" class="li" type="password" placeholder="Mot de passe" onkeydown="if(event.key==='Enter')doPortalLogin(''+type+'')"/><button class="eyb" onclick="var e=g('ppwd');e.type=e.type==='password'?'text':'password'">👁</button></div></div>'+
+  '<div style="display:flex;gap:8px"><input id="ppwd" class="li" type="password" placeholder="Mot de passe" onkeydown="if(event.key===\'Enter\')doPortalLogin(\''+type+'\')"/><button class="eyb" onclick="var e=g(\'ppwd\');e.type=e.type===\'password\'?\'text\':\'password\'">👁</button></div></div>'+
   '<div id="perr" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:9px;padding:9px;color:#FCA5A5;font-size:12px;font-weight:600;display:none;margin-bottom:12px;text-align:center">❌ Identifiant ou mot de passe incorrect</div>'+
-  '<button class="lbtn" onclick="doPortalLogin(''+type+'')">🔐 Accéder à mon espace</button>'+
+  '<button class="lbtn" onclick="doPortalLogin(\''+type+'\')">🔐 Accéder à mon espace</button>'+
   '<div style="font-size:9px;color:#1A3050;text-align:center">Motivation Business Plus © 2026</div>'+
   '</div></div>';
 }
@@ -708,7 +708,9 @@ function doLogin(){
     _loggedUser=foundUser;
     g("lerr").style.display="none";
     g("login").classList.remove("show");
+    g("login").style.display="none";
     g("app").classList.add("show");
+    g("app").style.display="block";
     initApp();
     // Log connexion
     if(fbDB&&isOnline){
@@ -723,7 +725,9 @@ function doLogout(){
     if(fbDB&&isOnline)fbDB.ref("mbp/logs").push({user:DB.s.uid,action:"Déconnexion",dt:new Date().toISOString()});
     _loggedUser=null;
     g("app").classList.remove("show");
+    g("app").style.display="none";
     g("login").classList.add("show");
+    g("login").style.display="flex";
     g("lp").value="";g("lerr").style.display="none";
   }
 }
