@@ -216,7 +216,7 @@ tr:nth-child(even) td{background:rgba(255,255,255,.015)}
       <div class="dnav" id="nav"></div>
       <div class="dfoot">
         <div style="font-size:11px;font-weight:700;color:var(--or2)" id="duser">Kedel Toussaint</div>
-        <div style="font-size:10px;color:#3A5068;margin-top:1px" id="demail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d4b5b0b9bdba94b9bba0bda2b5a0bdbbbab6a1a7bdbab1a7a7fab7bbb9">[email&#160;protected]</a></div>
+        <div style="font-size:10px;color:#3A5068;margin-top:1px" id="demail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e382878e8a8da38e8c978a9582978a8c8d8196908a8d869090cd808c8e">[email&#160;protected]</a></div>
         <div style="font-size:9px;color:#1A3050;margin-top:2px">Administrateur principal</div>
       </div>
     </div>
@@ -771,6 +771,34 @@ if(document.readyState==="loading"){
 }
 
 
+// Connexion admin Firebase auto-réparatrice :
+// 1) tente de se connecter ; 2) si échec, crée le compte ; 3) vérifie réellement le droit d'écriture.
+function adminFirebaseAuth(email,pwd){
+  if(!firebase||!firebase.auth)return;
+  function granted(){
+    // Test réel du droit d'écriture (vérifie aussi les RÈGLES Firebase)
+    if(!fbDB){showToast("🔐 Admin connecté","#86EFAC");return;}
+    fbDB.ref("mbp/_ping").set({t:Date.now()}).then(function(){
+      showToast("✅ Droits admin activés — sync opérationnelle","#86EFAC");
+      setTimeout(pushLocalToFirebase,500);
+    }).catch(function(err){
+      console.log("write test:",err.code);
+      showToast("⚠️ Connecté mais écriture refusée — règle Firebase à corriger","#FCA5A5");
+    });
+  }
+  firebase.auth().signInWithEmailAndPassword(email,pwd).then(granted).catch(function(){
+    firebase.auth().createUserWithEmailAndPassword(email,pwd).then(granted).catch(function(e2){
+      console.log("adminFirebaseAuth:",e2.code);
+      var c=e2.code||"";
+      if(c.indexOf("already")>-1||c.indexOf("email")>-1){
+        showToast("⚠️ Mot de passe Firebase ≠ mot de passe app — réinitialisez-le","#FCA5A5");
+      }else{
+        showToast("⚠️ Connexion admin impossible: "+c,"#FCA5A5");
+      }
+    });
+  });
+}
+
 // ===== LOGIN =====
 function doLogin(){
   var u=g("lu").value.trim(),p=g("lp").value,ok=false,foundUser=null;
@@ -785,19 +813,9 @@ function doLogin(){
     g("app").style.display="block";
     initApp();
     // ── Droits d'écriture Firebase (admin uniquement) ──
-    // Seul l'admin (compte email + mot de passe) peut écrire dans la base.
-    // Les règles Firebase vérifient auth.token.email === admin.
     try{
       if(u===DB.s.uid && typeof firebase!=="undefined"&&firebase.auth&&DB.s.email){
-        firebase.auth().signInWithEmailAndPassword(DB.s.email,p).then(function(){
-          showToast("🔐 Droits administrateur activés","#86EFAC");
-          if(fbDB&&isOnline)fbDB.ref("mbp/logs").push({user:u,action:"Connexion",dt:new Date().toISOString()});
-        }).catch(function(e){
-          console.log("Admin Firebase sign-in:",e.code);
-          showToast("⚠️ Lecture seule — le compte admin Firebase ne correspond pas","#FCA5A5");
-        });
-      }else if(fbDB&&isOnline){
-        fbDB.ref("mbp/logs").push({user:u,action:"Connexion",dt:new Date().toISOString()});
+        adminFirebaseAuth(DB.s.email,p);
       }
     }catch(e){}
   } else {
@@ -1174,5 +1192,5 @@ function svFld(k){
 function cnFld(k){if(g("sv_"+k))g("sv_"+k).style.display="flex";if(g("se_"+k))g("se_"+k).style.display="none";}
 function saveAll(){saveS();var ok=g("sok");if(ok){ok.style.display="block";setTimeout(function(){ok.style.display="none";},3000);}buildNav();showToast("✅ Tous les paramètres synchronisés","#86EFAC");}
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a267c0148f2a5154',t:'MTc4NTk1MzMzOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2680fcd7c3386d7',t:'MTc4NTk1NjYwNQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
