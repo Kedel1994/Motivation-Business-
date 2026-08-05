@@ -216,7 +216,7 @@ tr:nth-child(even) td{background:rgba(255,255,255,.015)}
       <div class="dnav" id="nav"></div>
       <div class="dfoot">
         <div style="font-size:11px;font-weight:700;color:var(--or2)" id="duser">Kedel Toussaint</div>
-        <div style="font-size:10px;color:#3A5068;margin-top:1px" id="demail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e382878e8a8da38e8c978a9582978a8c8d8196908a8d869090cd808c8e">[email&#160;protected]</a></div>
+        <div style="font-size:10px;color:#3A5068;margin-top:1px" id="demail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="650401080c0b25080a110c1304110c0a0b0710160c0b0016164b060a08">[email&#160;protected]</a></div>
         <div style="font-size:9px;color:#1A3050;margin-top:2px">Administrateur principal</div>
       </div>
     </div>
@@ -421,14 +421,14 @@ function openM(title,body,saveFn){
   document.body.insertAdjacentHTML("beforeend",'<div class="mbg" id="modal"><div class="mc"><div class="mh"><h2>'+title+'</h2><button class="btn br" onclick="closeM()" style="padding:5px 10px">✕</button></div><form id="mf">'+body+'<div class="frow"><button type="button" class="btn br" onclick="closeM()">Annuler</button><button type="button" class="btn bg" onclick="'+saveFn+'()">💾 Enregistrer</button></div></form></div></div>');
 }
 function closeM(){var m=g("modal");if(m)m.remove();}
-function tbl(cols,rows,ef,df){
+function tbl(cols,rows,ef,df,xf){
   if(!rows.length)return'<p class="em">📭 Aucune donnée enregistrée</p>';
   var h='<div class="tw"><table><thead><tr>';
   cols.forEach(function(c){h+="<th>"+c+"</th>";});
-  if(ef||df)h+="<th>Actions</th>";
+  if(ef||df||xf)h+="<th>Actions</th>";
   h+="</tr></thead><tbody>";
   rows.forEach(function(r,i){h+="<tr>";r.forEach(function(c){h+="<td>"+c+"</td>";});
-    if(ef||df){h+="<td style='white-space:nowrap'>";if(ef)h+='<button class="be" onclick="'+ef+'('+i+')">✏️</button> ';if(df)h+='<button class="bd" onclick="'+df+'('+i+')">🗑</button>';h+="</td>";}h+="</tr>";});
+    if(ef||df||xf){h+="<td style='white-space:nowrap'>";if(xf)h+='<button class="be" title="Relevé" onclick="'+xf+'('+i+')">📋</button> ';if(ef)h+='<button class="be" onclick="'+ef+'('+i+')">✏️</button> ';if(df)h+='<button class="bd" onclick="'+df+'('+i+')">🗑</button>';h+="</td>";}h+="</tr>";});
   return h+"</tbody></table></div>";
 }
 function sc(ic,lb,val,col){
@@ -622,6 +622,31 @@ function showPortalDashboard(type,user){
     html+=sc("⬆️","Total retraits",cur(cRetraits.reduce(function(a,r){return a+(+r.montant||0);},0)),"#F97316");
     html+='</div>';
     
+    // Relevé (carnet bancaire) — transactions + solde automatique
+    if(cComptes.length){
+      html+='<div style="background:rgba(255,255,255,.03);border:1px solid rgba(212,160,23,.12);border-radius:14px;padding:14px;margin-bottom:12px">';
+      html+='<div style="font-size:12px;font-weight:800;color:#F5C842;margin-bottom:10px">📋 Mon relevé (carnet)</div>';
+      cComptes.forEach(function(cc){
+        var ld=buildLedger(cc);
+        if(ld.rows.length>1){
+          html+='<div style="overflow-x:auto;margin-bottom:8px"><table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:rgba(212,160,23,.07)"><th style="padding:6px;text-align:left;color:#D4A017;font-size:9px">Date</th><th style="padding:6px;text-align:left;color:#D4A017;font-size:9px">Description</th><th style="padding:6px;text-align:right;color:#D4A017;font-size:9px">Dépôt</th><th style="padding:6px;text-align:right;color:#D4A017;font-size:9px">Retrait</th><th style="padding:6px;text-align:right;color:#D4A017;font-size:9px">Solde</th></tr></thead><tbody>';
+          ld.rows.forEach(function(r){
+            html+='<tr style="border-top:1px solid rgba(255,255,255,.03)'+(r.ouv?';background:rgba(212,160,23,.06)':'')+'">';
+            html+='<td style="padding:6px;color:#C5D8E8;white-space:nowrap">'+fd(r.date)+'</td>';
+            html+='<td style="padding:6px;color:#C5D8E8">'+esc(r.desc)+'</td>';
+            html+='<td style="padding:6px;text-align:right;color:#22C55E">'+(r.dep?('+'+cur(r.dep)):'—')+'</td>';
+            html+='<td style="padding:6px;text-align:right;color:#F97316">'+(r.ret?('-'+cur(r.ret)):'—')+'</td>';
+            html+='<td style="padding:6px;text-align:right;color:'+(r.solde>=0?'#C5D8E8':'#FCA5A5')+';font-weight:700">'+cur(r.solde)+'</td></tr>';
+          });
+          html+='</tbody></table></div>';
+          html+='<div style="text-align:right;font-size:11px;color:#3A5068">Solde final : <b style="color:'+(ld.final>=0?'#22C55E':'#EF4444')+';font-size:14px">'+cur(ld.final)+'</b></div>';
+        } else {
+          html+='<div style="font-size:11px;color:#3A5068;padding:6px 0">Aucune transaction pour le moment.</div>';
+        }
+      });
+      html+='</div>';
+    }
+    
     // Comptes
     if(cComptes.length){
       html+='<div style="background:rgba(255,255,255,.03);border:1px solid rgba(212,160,23,.12);border-radius:14px;padding:14px;margin-bottom:12px">';
@@ -629,7 +654,7 @@ function showPortalDashboard(type,user){
       cComptes.forEach(function(x){
         html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">';
         html+='<div><div style="color:#C5D8E8;font-size:12px;font-weight:600">'+x.type+'</div><div style="color:#F5C842;font-family:monospace;font-size:10px">'+x.nc+'</div></div>';
-        html+='<div style="text-align:right"><div style="color:#22C55E;font-weight:800;font-size:14px">$'+fm(x.solde)+'</div><div style="font-size:9px;color:#3A5068">Taux : '+(x.taux||0)+'%</div></div></div>';
+        html+='<div style="text-align:right"><div style="color:#22C55E;font-weight:800;font-size:14px">'+cur(x.solde)+'</div><div style="font-size:9px;color:#3A5068">Taux : '+(x.taux||0)+'%</div></div></div>';
       });
       html+='</div>';
     }
@@ -641,7 +666,7 @@ function showPortalDashboard(type,user){
       cDepots.slice(-5).reverse().forEach(function(d){
         html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">';
         html+='<div><div style="color:#C5D8E8;font-size:11px">'+d.type+'</div><div style="color:#3A5068;font-size:10px">'+fd(d.dt)+'</div></div>';
-        html+='<div style="color:#22C55E;font-weight:700;font-size:13px">+$'+fm(d.montant)+'</div></div>';
+        html+='<div style="color:#22C55E;font-weight:700;font-size:13px">+'+cur(d.montant)+'</div></div>';
       });
       html+='</div>';
     }
@@ -653,7 +678,7 @@ function showPortalDashboard(type,user){
       cRetraits.slice(-5).reverse().forEach(function(r){
         html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">';
         html+='<div><div style="color:#C5D8E8;font-size:11px">'+(r.motif||"Retrait")+'</div><div style="color:#3A5068;font-size:10px">'+fd(r.dt)+'</div></div>';
-        html+='<div style="color:#F97316;font-weight:700;font-size:13px">-$'+fm(r.montant)+'</div></div>';
+        html+='<div style="color:#F97316;font-weight:700;font-size:13px">-'+cur(r.montant)+'</div></div>';
       });
       html+='</div>';
     }
@@ -667,10 +692,10 @@ function showPortalDashboard(type,user){
         var reste=Math.max(0,(+p.total||0)-dejaPaye);
         var pct=p.total>0?Math.round((dejaPaye/p.total)*100):0;
         html+='<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">';
-        html+='<div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:#C5D8E8;font-size:11px">$'+fm(p.montant)+' — '+p.duree+' mois</span>'+bdg(p.statut)+'</div>';
-        html+='<div style="display:flex;justify-content:space-between;font-size:10px;color:#3A5068;margin-bottom:5px"><span>Remboursé : $'+fm(dejaPaye)+'</span><span>Reste : <b style="color:#F5C842">$'+fm(reste)+'</b></span></div>';
+        html+='<div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:#C5D8E8;font-size:11px">'+cur(p.montant)+' — '+p.duree+' mois</span>'+bdg(p.statut)+'</div>';
+        html+='<div style="display:flex;justify-content:space-between;font-size:10px;color:#3A5068;margin-bottom:5px"><span>Remboursé : '+cur(dejaPaye)+'</span><span>Reste : <b style="color:#F5C842">'+cur(reste)+'</b></span></div>';
         html+='<div style="background:rgba(255,255,255,.06);border-radius:99px;height:4px"><div style="background:linear-gradient(90deg,#22C55E,#16A34A);height:4px;border-radius:99px;width:'+pct+'%"></div></div>';
-        html+='<div style="font-size:9px;color:#3A5068;margin-top:3px">Mensualité : $'+fm(p.mens)+' | Progression : '+pct+'%</div>';
+        html+='<div style="font-size:9px;color:#3A5068;margin-top:3px">Mensualité : '+cur(p.mens)+' | Progression : '+pct+'%</div>';
         html+='</div>';
       });
       html+='</div>';
@@ -698,13 +723,13 @@ function showPortalDashboard(type,user){
     html+='<div style="font-size:12px;font-weight:800;color:#F5C842;margin-bottom:12px">📈 Aperçu du système</div>';
     var tE=DB.comptes.reduce(function(a2,c2){return a2+(+c2.solde||0);},0);
     var tP=DB.prets.reduce(function(a2,p2){return a2+(+p2.montant||0);},0);
-    var rows=[["💵 Total épargne",cur(tE)],["📋 Prêts accordés",DB.prets.length+" — $"+fm(tP)],["👥 Total clients",DB.clients.length],["💰 Intérêts générés",cur(ben)]];
+    var rows=[["💵 Total épargne",cur(tE)],["📋 Prêts accordés",DB.prets.length+" — "+cur(tP)],["👥 Total clients",DB.clients.length],["💰 Intérêts générés",cur(ben)]];
     rows.forEach(function(r){html+='<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px"><span style="color:#3A5068">'+r[0]+'</span><span style="color:#C5D8E8;font-weight:700">'+r[1]+'</span></div>';});
     html+='</div>';
     
     html+='<div style="background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2);border-radius:14px;padding:14px;text-align:center">';
     html+='<div style="font-size:11px;color:#C4B5FD;font-weight:700;margin-bottom:4px">🎯 Votre bénéfice estimé</div>';
-    html+='<div style="font-size:28px;font-weight:900;color:#A78BFA">$'+fm(monBen)+'</div>';
+    html+='<div style="font-size:28px;font-weight:900;color:#A78BFA">'+cur(monBen)+'</div>';
     html+='<div style="font-size:10px;color:#5A4A7A;margin-top:3px">Basé sur '+a.pct+'% des bénéfices générés</div>';
     html+='</div>';
   }
@@ -880,7 +905,7 @@ function rDash(){
   h+='</div>';
   h+='<div class="card"><div style="font-size:11px;font-weight:800;color:var(--or2);margin-bottom:10px">💳 Derniers prêts</div>';
   var lp=DB.prets.slice(-4).reverse();
-  if(lp.length)lp.forEach(function(p){var cl=DB.clients.find(function(x){return x.id===p.cid;});h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)"><div><div style="color:#C5D8E8;font-size:11px">'+(cl?cl.prenom+" "+cl.nom:"—")+'</div><div style="color:var(--or2);font-size:10px">$'+fm(p.montant)+'</div></div>'+bdg(p.statut)+'</div>';});
+  if(lp.length)lp.forEach(function(p){var cl=DB.clients.find(function(x){return x.id===p.cid;});h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)"><div><div style="color:#C5D8E8;font-size:11px">'+(cl?cl.prenom+" "+cl.nom:"—")+'</div><div style="color:var(--or2);font-size:10px">'+cur(p.montant)+'</div></div>'+bdg(p.statut)+'</div>';});
   else h+='<p class="em">Aucun prêt</p>';
   h+='</div></div>';
   return h;
@@ -892,7 +917,7 @@ function rClients(){
   var q=(_cq||"").toLowerCase();
   var list=DB.clients.filter(function(c){return(c.nom+" "+c.prenom+" "+(c.tel||"")+" "+(c.nc||"")).toLowerCase().includes(q);});
   var h='<div class="sth"><h2>👥 Clients</h2><div style="display:flex;gap:8px"><input placeholder="🔍 Rechercher..." value="'+esc(_cq||"")+'" oninput="_cq=this.value;render()" style="padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(212,160,23,.18);color:#fff;font-size:11px;outline:none;width:130px"/><button class="btn bg" onclick="openClient(null)">➕ Nouveau</button></div></div>';
-  var rows=list.map(function(c){return['<span class="nc">'+c.nc+'</span>',c.nom,c.prenom,c.tel||"—",c.profession||"—",bdg(c.statut==="1"?"Actif":"Inactif"),fd(c.dc)];});
+  var rows=list.map(function(c){return['<span class="nc">'+c.nc+'</span> <button class="be" title="Voir le relevé" style="padding:2px 6px;font-size:9px;margin-left:4px" onclick="releveByClient(\''+c.id+'\')">📋</button>',c.nom,c.prenom,c.tel||"—",c.profession||"—",bdg(c.statut==="1"?"Actif":"Inactif"),fd(c.dc)];});
   return h+tbl(["N° Compte","Nom","Prénom","Téléphone","Profession","Statut","Inscrit"],rows,"editClient","delClient");
 }
 function openClient(i){
@@ -917,7 +942,7 @@ function delClient(i){if(confirm("Supprimer ce client ?"))DB.clients.splice(i,1)
 var _coi=null;
 function rComptes(){
   var rows=DB.comptes.map(function(c){var cl=DB.clients.find(function(x){return x.id===c.cid;});return['<span class="nc">'+c.nc+'</span>',cl?cl.prenom+" "+cl.nom+" ["+cl.nc+"]":"—",c.type,cur(c.solde),(c.taux||0)+"%",bdg(c.statut==="1"?"Actif":"Fermé")];});
-  return'<div class="sth"><h2>🏦 Comptes</h2><button class="btn bg" onclick="openCompte(null)">➕ Nouveau</button></div>'+tbl(["N° Compte","Client","Type","Solde","Taux","Statut"],rows,"editCompte","delCompte");
+  return'<div class="sth"><h2>🏦 Comptes</h2><button class="btn bg" onclick="openCompte(null)">➕ Nouveau</button></div>'+tbl(["N° Compte","Client","Type","Solde","Taux","Statut"],rows,"editCompte","delCompte","releveCompte");
 }
 function openCompte(i){
   _coi=i;var c=i!=null?Object.assign({},DB.comptes[i]):{cid:"",type:"Ordinaire",solde:"",taux:"",statut:"1"};
@@ -933,9 +958,67 @@ function saveCompte(){
 function editCompte(i){openCompte(i);}
 function delCompte(i){if(confirm("Supprimer ?"))DB.comptes.splice(i,1);save("comptes");render();}
 
+// ===== RELEVÉ BANCAIRE (carnet) — transactions + solde automatique =====
+function buildLedger(c){
+  var deps=DB.depots.filter(function(d){return d.cid===c.id;});
+  var rets=DB.retraits.filter(function(r){return r.cid===c.id;});
+  var tD=deps.reduce(function(s,d){return s+(+d.montant||0);},0);
+  var tR=rets.reduce(function(s,r){return s+(+r.montant||0);},0);
+  var ouv=(+c.solde||0)-tD+tR; // solde d'ouverture reconstitué à partir du solde actuel
+  var txs=[];
+  deps.forEach(function(d){txs.push({date:d.dt,desc:"Dépôt"+(d.type?(" ("+d.type+")"):""),dep:+d.montant||0,ret:0,ref:d.ref||"—",k:(d.dt||"")+"|"+(d.id||"")});});
+  rets.forEach(function(r){txs.push({date:r.dt,desc:r.motif||"Retrait",dep:0,ret:+r.montant||0,ref:"—",k:(r.dt||"")+"|"+(r.id||"")});});
+  txs.sort(function(a,b){return a.k<b.k?-1:(a.k>b.k?1:0);});
+  var rows=[];var bal=ouv;
+  rows.push({date:c.do_||"—",desc:"Solde d'ouverture",dep:0,ret:0,solde:ouv,ref:"—",ouv:true});
+  txs.forEach(function(t){bal=bal+t.dep-t.ret;rows.push({date:t.date,desc:t.desc,dep:t.dep,ret:t.ret,solde:bal,ref:t.ref,ouv:false});});
+  return{ouv:ouv,rows:rows,final:bal,nbDep:deps.length,nbRet:rets.length,tD:tD,tR:tR};
+}
+function releveCompte(i){openReleve(DB.comptes[i]);}
+function releveByClient(cid){
+  var cpt=DB.comptes.find(function(c){return c.cid===cid;});
+  if(!cpt){alert("Ce client n'a pas encore de compte. Créez-lui un compte d'abord.");return;}
+  openReleve(cpt);
+}
+function openReleveModal(body){
+  closeM();
+  document.body.insertAdjacentHTML("beforeend",'<div class="mbg" id="modal"><div class="mc" style="max-width:700px"><div class="mh"><h2>📋 Relevé de compte</h2><button class="btn br" onclick="closeM()" style="padding:5px 10px">✕</button></div>'+body+'<div class="frow"><button type="button" class="btn bg" onclick="closeM()">Fermer</button></div></div></div>');
+}
+function openReleve(c){
+  var ld=buildLedger(c);
+  var cl=DB.clients.find(function(x){return x.id===c.cid;});
+  var nom=cl?(cl.prenom+" "+cl.nom):"—";
+  var h='<div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">';
+  h+='<div><div style="font-size:14px;font-weight:800;color:var(--or2)">'+esc(nom)+'</div>';
+  h+='<div style="font-size:11px;color:#3A5068"><span class="nc">'+c.nc+'</span> · '+esc(c.type||"Compte")+'</div></div>';
+  h+='<div style="text-align:right"><div style="font-size:9px;color:#4A6580;text-transform:uppercase;letter-spacing:.8px">Solde final</div>';
+  h+='<div style="font-size:20px;font-weight:900;color:'+(ld.final>=0?"#22C55E":"#EF4444")+'">'+cur(ld.final)+'</div></div></div>';
+  if(ld.rows.length<=1){
+    h+='<p class="em">Aucune transaction sur ce compte pour le moment.</p>';
+  } else {
+    h+='<div class="tw"><table><thead><tr><th>Date</th><th>Description</th><th style="text-align:right">Dépôt</th><th style="text-align:right">Retrait</th><th style="text-align:right">Solde</th><th>Réf.</th></tr></thead><tbody>';
+    ld.rows.forEach(function(r){
+      h+='<tr'+(r.ouv?' style="background:rgba(212,160,23,.07)"':'')+'>';
+      h+='<td style="white-space:nowrap">'+fd(r.date)+'</td>';
+      h+='<td>'+esc(r.desc)+'</td>';
+      h+='<td style="text-align:right;color:#22C55E">'+(r.dep?('+'+cur(r.dep)):'—')+'</td>';
+      h+='<td style="text-align:right;color:#F97316">'+(r.ret?('-'+cur(r.ret)):'—')+'</td>';
+      h+='<td style="text-align:right;font-weight:700;color:'+(r.solde>=0?'#C5D8E8':'#FCA5A5')+'">'+cur(r.solde)+'</td>';
+      h+='<td style="font-size:10px;color:#4A6580">'+esc(r.ref)+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+    h+='<div style="display:flex;gap:14px;margin-top:12px;font-size:10px;color:#4A6580;justify-content:flex-end;flex-wrap:wrap">';
+    h+='<span>Dépôts : <b style="color:#22C55E">'+ld.nbDep+'</b></span>';
+    h+='<span>Retraits : <b style="color:#F97316">'+ld.nbRet+'</b></span>';
+    h+='<span>Total déposé : <b>'+cur(ld.tD)+'</b></span>';
+    h+='<span>Total retiré : <b>'+cur(ld.tR)+'</b></span></div>';
+  }
+  openReleveModal(h);
+}
+
 // DEPOTS
 function rDepots(){
-  var rows=DB.depots.map(function(d){var c=DB.comptes.find(function(x){return x.id===d.cid;});var cl=c?DB.clients.find(function(x){return x.id===c.cid;}):null;return[d.id,(c?'<span class="nc">'+c.nc+'</span>':"—")+(cl?" — "+cl.prenom+" "+cl.nom:""),"<b>$"+fm(d.montant)+"</b>",d.type||"Caisse",d.ref||"—",fd(d.dt)];});
+  var rows=DB.depots.map(function(d){var c=DB.comptes.find(function(x){return x.id===d.cid;});var cl=c?DB.clients.find(function(x){return x.id===c.cid;}):null;return[d.id,(c?'<span class="nc">'+c.nc+'</span>':"—")+(cl?" — "+cl.prenom+" "+cl.nom:""),"<b>"+cur(d.montant)+"</b>",d.type||"Caisse",d.ref||"—",fd(d.dt)];});
   return'<div class="sth"><h2>⬇️ Dépôts</h2><button class="btn bg" onclick="openDepot()">➕ Nouveau</button></div>'+tbl(["ID","Compte / Client","Montant","Type","Référence","Date"],rows,null,"delDepot");
 }
 function openDepot(){
@@ -946,7 +1029,7 @@ function openDepot(){
 function upDepot(){
   var f=g("mf");if(!f)return;var b=g("dpSolde");if(!b)return;
   var cpt=DB.comptes.find(function(x){return x.id===fv(f,"cid");});var mont=+fv(f,"montant")||0;
-  if(cpt){var nouv=(+cpt.solde||0)+mont;b.innerHTML='<div style="font-size:11px;font-weight:700;color:#86EFAC;margin-bottom:6px">💰 Solde après dépôt</div><div class="s2" style="font-size:11px"><span style="color:#6B8BAA">Actuel : <b style="color:#C5D8E8">$'+fm(cpt.solde)+'</b></span><span style="color:#6B8BAA">Nouveau : <b style="color:#22C55E">$'+fm(nouv)+'</b></span></div>';}
+  if(cpt){var nouv=(+cpt.solde||0)+mont;b.innerHTML='<div style="font-size:11px;font-weight:700;color:#86EFAC;margin-bottom:6px">💰 Solde après dépôt</div><div class="s2" style="font-size:11px"><span style="color:#6B8BAA">Actuel : <b style="color:#C5D8E8">'+cur(cpt.solde)+'</b></span><span style="color:#6B8BAA">Nouveau : <b style="color:#22C55E">'+cur(nouv)+'</b></span></div>';}
   else b.innerHTML='<div style="color:#3A5068;font-size:11px">Sélectionnez un compte</div>';
 }
 function saveDepot(){
@@ -955,7 +1038,7 @@ function saveDepot(){
   DB.depots.push({id:uid_(),cid:cid,montant:mont,type:fv(f,"type"),ref:fv(f,"ref"),dt:td()});
   var cpt=DB.comptes.find(function(x){return x.id===cid;});
   if(cpt){cpt.solde=(+cpt.solde||0)+mont;save("comptes");}
-  save("depots");closeM();showToast("✅ Dépôt enregistré — solde mis à jour"+(cpt?(" ($"+fm(cpt.solde)+")"):""),"#86EFAC");render();
+  save("depots");closeM();showToast("✅ Dépôt enregistré — solde mis à jour"+(cpt?(" ("+cur(cpt.solde)+")"):""),"#86EFAC");render();
 }
 function delDepot(i){
   if(confirm("Supprimer ce dépôt ? Le solde du compte sera ajusté.")){
@@ -968,7 +1051,7 @@ function delDepot(i){
 
 // RETRAITS
 function rRetraits(){
-  var rows=DB.retraits.map(function(r){var c=DB.comptes.find(function(x){return x.id===r.cid;});var cl=c?DB.clients.find(function(x){return x.id===c.cid;}):null;return[r.id,(c?'<span class="nc">'+c.nc+'</span>':"—")+(cl?" — "+cl.prenom+" "+cl.nom:""),"<b>$"+fm(r.montant)+"</b>",r.motif||"—",fd(r.dt)];});
+  var rows=DB.retraits.map(function(r){var c=DB.comptes.find(function(x){return x.id===r.cid;});var cl=c?DB.clients.find(function(x){return x.id===c.cid;}):null;return[r.id,(c?'<span class="nc">'+c.nc+'</span>':"—")+(cl?" — "+cl.prenom+" "+cl.nom:""),"<b>"+cur(r.montant)+"</b>",r.motif||"—",fd(r.dt)];});
   return'<div class="sth"><h2>⬆️ Retraits</h2><button class="btn bg" onclick="openRetrait()">➕ Nouveau</button></div>'+tbl(["ID","Compte / Client","Montant","Motif","Date"],rows,null,"delRetrait");
 }
 function openRetrait(){
@@ -979,7 +1062,7 @@ function openRetrait(){
 function upRetrait(){
   var f=g("mf");if(!f)return;var b=g("rtSolde");if(!b)return;
   var cpt=DB.comptes.find(function(x){return x.id===fv(f,"cid");});var mont=+fv(f,"montant")||0;
-  if(cpt){var nouv=(+cpt.solde||0)-mont;var col=nouv>=0?"#22C55E":"#EF4444";b.innerHTML='<div style="font-size:11px;font-weight:700;color:#86EFAC;margin-bottom:6px">💰 Solde après retrait</div><div class="s2" style="font-size:11px"><span style="color:#6B8BAA">Actuel : <b style="color:#C5D8E8">$'+fm(cpt.solde)+'</b></span><span style="color:#6B8BAA">Nouveau : <b style="color:'+col+'">$'+fm(nouv)+'</b></span></div>'+(nouv<0?'<div style="color:#FCA5A5;font-size:10px;margin-top:5px">⚠️ Solde négatif !</div>':'');}
+  if(cpt){var nouv=(+cpt.solde||0)-mont;var col=nouv>=0?"#22C55E":"#EF4444";b.innerHTML='<div style="font-size:11px;font-weight:700;color:#86EFAC;margin-bottom:6px">💰 Solde après retrait</div><div class="s2" style="font-size:11px"><span style="color:#6B8BAA">Actuel : <b style="color:#C5D8E8">'+cur(cpt.solde)+'</b></span><span style="color:#6B8BAA">Nouveau : <b style="color:'+col+'">'+cur(nouv)+'</b></span></div>'+(nouv<0?'<div style="color:#FCA5A5;font-size:10px;margin-top:5px">⚠️ Solde négatif !</div>':'');}
   else b.innerHTML='<div style="color:#3A5068;font-size:11px">Sélectionnez un compte</div>';
 }
 function saveRetrait(){
@@ -988,7 +1071,7 @@ function saveRetrait(){
   DB.retraits.push({id:uid_(),cid:cid,montant:mont,motif:fv(f,"motif"),dt:td()});
   var cpt=DB.comptes.find(function(x){return x.id===cid;});
   if(cpt){cpt.solde=(+cpt.solde||0)-mont;save("comptes");}
-  save("retraits");closeM();showToast("✅ Retrait enregistré — solde mis à jour"+(cpt?(" ($"+fm(cpt.solde)+")"):""),"#86EFAC");render();
+  save("retraits");closeM();showToast("✅ Retrait enregistré — solde mis à jour"+(cpt?(" ("+cur(cpt.solde)+")"):""),"#86EFAC");render();
 }
 function delRetrait(i){
   if(confirm("Supprimer ce retrait ? Le solde du compte sera ajusté.")){
@@ -1010,7 +1093,7 @@ function calcPret(cap,tx,n,fm_){
   return{i:i,t:t,m:m,fin:ds(fin)};
 }
 function rPrets(){
-  var rows=DB.prets.map(function(p){var cl=DB.clients.find(function(x){return x.id===p.cid;});return[cl?'<span class="nc">'+cl.nc+'</span>':"—",cl?cl.prenom+" "+cl.nom:"—","<b>$"+fm(p.montant)+"</b>",p.taux+"%",cur(p.mens),"<b style='color:var(--or2)'>$"+fm(p.total)+"</b>",bdg(p.statut),fd(p.fin)];});
+  var rows=DB.prets.map(function(p){var cl=DB.clients.find(function(x){return x.id===p.cid;});return[cl?'<span class="nc">'+cl.nc+'</span>':"—",cl?cl.prenom+" "+cl.nom:"—","<b>"+cur(p.montant)+"</b>",p.taux+"%",cur(p.mens),"<b style='color:var(--or2)'>"+cur(p.total)+"</b>",bdg(p.statut),fd(p.fin)];});
   return'<div class="sth"><h2>📋 Prêts</h2><button class="btn bg" onclick="openPret(null)">➕ Nouveau</button></div>'+tbl(["N° Compte","Client","Capital","Taux","Mensualité","Total","Statut","Échéance"],rows,"editPret","delPret");
 }
 function openPret(i){
@@ -1022,7 +1105,7 @@ function openPret(i){
 }
 function upPC(){
   var f=g("mf");if(!f)return;var c=calcPret(+fv(f,"montant"),+fv(f,"taux"),+fv(f,"duree"),fv(f,"formule"));var b=g("pc");if(!b)return;
-  if(c)b.innerHTML='<div style="font-size:11px;font-weight:700;color:#86EFAC;margin-bottom:6px">✅ Calcul automatique</div><div class="s2" style="font-size:11px"><span style="color:#6B8BAA">Intérêt : <b style="color:#C5D8E8">$'+fm(c.i)+'</b></span><span style="color:#6B8BAA">Total : <b style="color:var(--or2)">$'+fm(c.t)+'</b></span><span style="color:#6B8BAA">Mensualité : <b style="color:#C5D8E8">$'+fm(c.m)+'</b></span><span style="color:#6B8BAA">Fin : <b style="color:#C5D8E8">'+fd(c.fin)+'</b></span></div>';
+  if(c)b.innerHTML='<div style="font-size:11px;font-weight:700;color:#86EFAC;margin-bottom:6px">✅ Calcul automatique</div><div class="s2" style="font-size:11px"><span style="color:#6B8BAA">Intérêt : <b style="color:#C5D8E8">'+cur(c.i)+'</b></span><span style="color:#6B8BAA">Total : <b style="color:var(--or2)">'+cur(c.t)+'</b></span><span style="color:#6B8BAA">Mensualité : <b style="color:#C5D8E8">'+cur(c.m)+'</b></span><span style="color:#6B8BAA">Fin : <b style="color:#C5D8E8">'+fd(c.fin)+'</b></span></div>';
   else b.innerHTML='<div style="color:#3A5068;font-size:11px">Entrez montant, taux et durée</div>';
 }
 function savePret(){
@@ -1036,11 +1119,11 @@ function delPret(i){if(confirm("Supprimer ?"))DB.prets.splice(i,1);save("prets")
 
 // REMBOURSEMENTS
 function rRembours(){
-  var rows=DB.rembours.map(function(r){var p=DB.prets.find(function(x){return x.id===r.pid;});var cl=p?DB.clients.find(function(x){return x.id===p.cid;}):null;return[cl?'<span class="nc">'+cl.nc+'</span>':"—",cl?cl.prenom+" "+cl.nom:"—","<b style='color:#86EFAC'>$"+fm(r.paye)+"</b>",cur(r.pen),"<b style='color:var(--or2)'>$"+fm(r.reste)+"</b>",fd(r.dt)];});
+  var rows=DB.rembours.map(function(r){var p=DB.prets.find(function(x){return x.id===r.pid;});var cl=p?DB.clients.find(function(x){return x.id===p.cid;}):null;return[cl?'<span class="nc">'+cl.nc+'</span>':"—",cl?cl.prenom+" "+cl.nom:"—","<b style='color:#86EFAC'>"+cur(r.paye)+"</b>",cur(r.pen),"<b style='color:var(--or2)'>"+cur(r.reste)+"</b>",fd(r.dt)];});
   return'<div class="sth"><h2>💳 Remboursements</h2><button class="btn bg" onclick="openRembours()">➕ Nouveau paiement</button></div>'+tbl(["N° Compte","Client","Payé","Pénalité","Reste dû","Date"],rows,null,"delRembours");
 }
 function openRembours(){
-  var opts=[{v:"",l:"-- Choisir --"}].concat(DB.prets.map(function(p){var cl=DB.clients.find(function(x){return x.id===p.cid;});return{v:p.id,l:(cl?cl.prenom+" "+cl.nom+" ["+cl.nc+"]":"?")+" — $"+fm(p.total)};}));
+  var opts=[{v:"",l:"-- Choisir --"}].concat(DB.prets.map(function(p){var cl=DB.clients.find(function(x){return x.id===p.cid;});return{v:p.id,l:(cl?cl.prenom+" "+cl.nom+" ["+cl.nc+"]":"?")+" — "+cur(p.total)};}));
   openM("💳 Remboursement",igrp("Prêt *","pid","","",opts)+g2(igrp("Montant payé ($) *","paye","","number"),igrp("Pénalité ($)","pen","0","number")),"saveRembours");
 }
 function saveRembours(){
@@ -1060,7 +1143,7 @@ function rTerme(){
   h+='<div class="s4" style="margin-bottom:14px">';
   Object.entries(TX).forEach(function(e){h+='<div class="card" style="text-align:center;padding:10px"><div style="color:var(--or2);font-weight:800;font-size:16px">'+e[1]+'%</div><div style="color:#3A5068;font-size:10px">'+e[0]+' mois</div></div>';});
   h+='</div>';
-  var rows=DB.terme.map(function(t){var cl=DB.clients.find(function(x){return x.id===t.cid;});return[cl?cl.prenom+" "+cl.nom+" ["+cl.nc+"]":"—",cur(t.montant),t.taux+"%",t.duree+" mois",cur(t.interet),"<b style='color:var(--or2)'>$"+fm(t.final)+"</b>",bdg(t.statut)];});
+  var rows=DB.terme.map(function(t){var cl=DB.clients.find(function(x){return x.id===t.cid;});return[cl?cl.prenom+" "+cl.nom+" ["+cl.nc+"]":"—",cur(t.montant),t.taux+"%",t.duree+" mois",cur(t.interet),"<b style='color:var(--or2)'>"+cur(t.final)+"</b>",bdg(t.statut)];});
   return h+tbl(["Client [N° Compte]","Capital","Taux","Durée","Intérêt","Final","Statut"],rows,"editTerme","delTerme");
 }
 function openTerme(i){
@@ -1073,7 +1156,7 @@ function openTerme(i){
 function upTC(){
   var f=g("mf");if(!f)return;var b=g("tc");if(!b)return;
   var cap=+fv(f,"montant"),dur=fv(f,"duree"),tx=TX[dur]||10;
-  if(cap>0&&dur){var i=cap*(tx/100);var fin=new Date(fv(f,"dd")||td());fin.setMonth(fin.getMonth()+(+dur));b.innerHTML='<div style="font-size:11px;font-weight:700;color:#86EFAC;margin-bottom:6px">✅ Taux : '+tx+'%</div><div class="s2" style="font-size:11px"><span style="color:#6B8BAA">Intérêt : <b style="color:#C5D8E8">$'+fm(i)+'</b></span><span style="color:#6B8BAA">Final : <b style="color:var(--or2)">$'+fm(cap+i)+'</b></span><span style="color:#6B8BAA">Échéance : <b style="color:#C5D8E8">'+fd(ds(fin))+'</b></span></div>';}
+  if(cap>0&&dur){var i=cap*(tx/100);var fin=new Date(fv(f,"dd")||td());fin.setMonth(fin.getMonth()+(+dur));b.innerHTML='<div style="font-size:11px;font-weight:700;color:#86EFAC;margin-bottom:6px">✅ Taux : '+tx+'%</div><div class="s2" style="font-size:11px"><span style="color:#6B8BAA">Intérêt : <b style="color:#C5D8E8">'+cur(i)+'</b></span><span style="color:#6B8BAA">Final : <b style="color:var(--or2)">'+cur(cap+i)+'</b></span><span style="color:#6B8BAA">Échéance : <b style="color:#C5D8E8">'+fd(ds(fin))+'</b></span></div>';}
   else b.innerHTML='<div style="color:#3A5068;font-size:11px">Entrez montant et durée</div>';
 }
 function saveTerme(){
@@ -1091,7 +1174,7 @@ var _ai=null,_ben="20000";
 function rAct(){
   var h='<div class="sth"><h2>🏛️ Actionnaires</h2><button class="btn bg" onclick="openAct(null)">➕ Nouveau</button></div>';
   h+='<div class="card" style="margin-bottom:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;color:var(--or);font-weight:700">📊 Bénéfice total simulé ($):</span><input type="number" value="'+esc(_ben)+'" oninput="_ben=this.value;render()" style="padding:6px 9px;border-radius:7px;background:rgba(255,255,255,.04);border:1px solid rgba(212,160,23,.18);color:#fff;font-size:12px;outline:none;width:120px"/></div>';
-  var rows=DB.act.map(function(a){return[a.nom,a.tel||"—",cur(a.cap),a.pct+"%","<b style='color:#86EFAC'>$"+fm(+_ben*(+a.pct/100))+"</b>",bdg(a.statut)];});
+  var rows=DB.act.map(function(a){return[a.nom,a.tel||"—",cur(a.cap),a.pct+"%","<b style='color:#86EFAC'>"+cur(+_ben*(+a.pct/100))+"</b>",bdg(a.statut)];});
   return h+tbl(["Nom","Téléphone","Capital","Part (%)","Bénéfice estimé","Statut"],rows,"editAct","delAct");
 }
 function openAct(i){
@@ -1116,7 +1199,7 @@ function rTres(){
   var tR=DB.retraits.reduce(function(a,r){return a+(+r.montant||0);},0);
   var tT=DB.terme.reduce(function(a,t){return a+(+t.montant||0);},0);
   var h='<div class="sth"><h2>💧 Trésorerie & Liquidité</h2></div><div class="s2" style="margin-bottom:10px">'+sc("🏦","Total épargne",cur(tC),"#22C55E")+sc("📋","Prêts engagés",cur(tP),"#F97316")+sc("🔒","Dépôts terme bloqués",cur(tT),"#8B5CF6")+sc("🛡️","Réserve ("+DB.s.res+"%)",cur(res),"#3B82F6")+sc("💧","Liquidité dispo.",cur(Math.max(0,liq)),liq>=0?"#22C55E":"#EF4444")+sc("📊","Flux net",cur(tD-tR),"#D4A017")+'</div>';
-  h+='<div class="card"><div style="font-size:12px;font-weight:800;color:var(--or2);margin-bottom:10px">📐 Formule de liquidité</div><div style="font-family:\'Courier New\',monospace;font-size:12px;color:#3A5068;line-height:2.4">Liquidité = Épargne − Prêts − Réserve<br><span style="color:var(--or)">= $'+fm(tC)+' − $'+fm(tP)+' − $'+fm(res)+'</span><br><span style="color:'+(liq>=0?"#22C55E":"#EF4444")+';font-weight:800;font-size:14px">= $'+fm(Math.max(0,liq))+'</span></div></div>';
+  h+='<div class="card"><div style="font-size:12px;font-weight:800;color:var(--or2);margin-bottom:10px">📐 Formule de liquidité</div><div style="font-family:\'Courier New\',monospace;font-size:12px;color:#3A5068;line-height:2.4">Liquidité = Épargne − Prêts − Réserve<br><span style="color:var(--or)">= '+cur(tC)+' − '+cur(tP)+' − '+cur(res)+'</span><br><span style="color:'+(liq>=0?"#22C55E":"#EF4444")+';font-weight:800;font-size:14px">= '+cur(Math.max(0,liq))+'</span></div></div>';
   return h;
 }
 
@@ -1127,7 +1210,7 @@ function rRapports(){
   var tR=DB.retraits.reduce(function(a,r){return a+(+r.montant||0);},0);
   var tRm=DB.rembours.reduce(function(a,r){return a+(+r.paye||0);},0);
   var tI=DB.prets.reduce(function(a,p){return a+(+p.total||0)-(+p.montant||0);},0);
-  var rows=[["👥 Total clients",DB.clients.length],["🏦 Total comptes",DB.comptes.length],["💵 Total épargne",cur(tE)],["⬇️ Dépôts",DB.depots.length+" — $"+fm(tD)],["⬆️ Retraits",DB.retraits.length+" — $"+fm(tR)],["📊 Flux net",cur(tD-tR)],["📋 Prêts accordés",DB.prets.length],["🟡 En cours",DB.prets.filter(function(p){return p.statut==="En cours";}).length],["🔴 En retard",DB.prets.filter(function(p){return p.statut==="Retard";}).length],["🟢 Soldés",DB.prets.filter(function(p){return p.statut==="Soldé";}).length],["💳 Remboursements",cur(tRm)],["💰 Intérêts générés",cur(tI)],["🔒 Dépôts à terme",DB.terme.length],["🏛️ Actionnaires actifs",DB.act.filter(function(a){return a.statut==="Actif";}).length],["💼 Capital actionnaires",cur(DB.act.reduce(function(a,ac){return a+(+ac.cap||0);},0))]];
+  var rows=[["👥 Total clients",DB.clients.length],["🏦 Total comptes",DB.comptes.length],["💵 Total épargne",cur(tE)],["⬇️ Dépôts",DB.depots.length+" — "+cur(tD)],["⬆️ Retraits",DB.retraits.length+" — "+cur(tR)],["📊 Flux net",cur(tD-tR)],["📋 Prêts accordés",DB.prets.length],["🟡 En cours",DB.prets.filter(function(p){return p.statut==="En cours";}).length],["🔴 En retard",DB.prets.filter(function(p){return p.statut==="Retard";}).length],["🟢 Soldés",DB.prets.filter(function(p){return p.statut==="Soldé";}).length],["💳 Remboursements",cur(tRm)],["💰 Intérêts générés",cur(tI)],["🔒 Dépôts à terme",DB.terme.length],["🏛️ Actionnaires actifs",DB.act.filter(function(a){return a.statut==="Actif";}).length],["💼 Capital actionnaires",cur(DB.act.reduce(function(a,ac){return a+(+ac.cap||0);},0))]];
   var h='<div class="sth"><h2>📈 Rapports Financiers</h2></div><div class="card" style="padding:4px">';
   rows.forEach(function(r,i){h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:'+(i<rows.length-1?"1px solid rgba(255,255,255,.04)":"none")+'"><span style="color:#3A5068;font-size:12px">'+r[0]+'</span><span style="color:#C5D8E8;font-weight:700;font-size:13px">'+r[1]+'</span></div>';});
   return h+'</div>';
@@ -1192,5 +1275,5 @@ function svFld(k){
 function cnFld(k){if(g("sv_"+k))g("sv_"+k).style.display="flex";if(g("se_"+k))g("se_"+k).style.display="none";}
 function saveAll(){saveS();var ok=g("sok");if(ok){ok.style.display="block";setTimeout(function(){ok.style.display="none";},3000);}buildNav();showToast("✅ Tous les paramètres synchronisés","#86EFAC");}
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2680fcd7c3386d7',t:'MTc4NTk1NjYwNQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
