@@ -1,0 +1,2069 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#0b1f33">
+<title>Evens-Motivation-Sòl</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<!-- Firebase SDK (compat — no build tools needed) -->
+<!-- Firebase REST API via fetch() — aucun SDK requis -->
+<style>
+:root{
+  --navy:#0b1f33;--navy2:#102a43;--ink:#182633;--muted:#6e7d8a;--muted2:#98a4af;
+  --line:#e4e9ed;--surface:#fff;--soft:#f8fafb;
+  --green:#0aa37f;--gdark:#087f65;--gsoft:#e9f8f3;
+  --blue:#4169d8;--bsoft:#edf1ff;
+  --orange:#e58949;--osoft:#fff3e9;
+  --red:#d44f5b;--rsoft:#fff0f1;
+  --purple:#8563cf;--psoft:#f2edff;
+  --shadow:0 1px 3px rgba(11,31,51,.04),0 6px 20px rgba(11,31,51,.06);
+  font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f4f6f8;min-height:100vh;color:var(--ink)}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+h1,h2,h3{margin-top:0}
+
+/* LOGIN */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;
+  background:linear-gradient(140deg,#0b1f33 0%,#1a4068 60%,#0aa37f44 100%);padding:1rem}
+.login-box{background:#fff;border-radius:18px;padding:2.5rem 2rem;width:100%;max-width:380px;
+  box-shadow:0 32px 80px rgba(0,0,0,.35)}
+.login-logo{text-align:center;font-size:2.8rem;margin-bottom:.5rem}
+.login-box h1{text-align:center;color:var(--navy);font-size:1.15rem;font-weight:800;margin-bottom:.2rem}
+.login-box p{text-align:center;color:var(--muted);font-size:.78rem;margin-bottom:1.75rem}
+#loginError{background:var(--rsoft);color:#94323c;padding:9px 12px;border-radius:9px;
+  font-size:.78rem;margin-bottom:12px;display:none;border-left:3px solid var(--red)}
+
+/* APP */
+#app{display:none}
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:55}
+#overlay.show{display:block}
+
+/* SIDEBAR */
+.sidebar{position:fixed;top:0;left:-270px;bottom:0;width:262px;background:var(--navy);
+  color:#cdd8e0;border-right:1px solid rgba(255,255,255,.06);
+  display:flex;flex-direction:column;z-index:60;transition:left .27s ease;overflow-y:auto}
+.sidebar.open{left:0}
+.sb-head{flex-shrink:0;padding:0 20px;height:74px;display:flex;flex-direction:column;
+  justify-content:center;border-bottom:1px solid rgba(255,255,255,.07)}
+.sb-head h2{font-size:.84rem;font-weight:800;color:#fff;line-height:1.3}
+.sb-head p{font-size:.7rem;color:rgba(255,255,255,.4);margin-top:2px}
+.sb-sol{margin:10px 12px;background:rgba(255,255,255,.07);border-radius:10px;
+  padding:9px 12px;cursor:pointer;display:flex;align-items:center;gap:7px;
+  border:1px solid rgba(255,255,255,.08);transition:background .15s}
+.sb-sol:hover{background:rgba(255,255,255,.13)}
+.sol-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+.sol-dot--actif{background:var(--green)}.sol-dot--suspendu{background:var(--orange)}
+.sol-dot--terminé{background:var(--muted2)}.sol-dot--default{background:var(--muted2)}
+.sb-sol-name{font-size:.77rem;font-weight:600;color:#fff;flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-lbl{padding:8px 20px 3px;font-size:.63rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.09em;color:rgba(255,255,255,.26)}
+.sb-item{display:flex;align-items:center;gap:10px;padding:8px 20px;font-size:.79rem;
+  color:rgba(255,255,255,.6);cursor:pointer;transition:all .15s;border-left:3px solid transparent}
+.sb-item:hover{background:rgba(255,255,255,.06);color:#fff}
+.sb-item.active{background:rgba(65,105,216,.2);color:#7ba8f7;border-left-color:var(--blue);font-weight:600}
+.sb-item i{width:16px;text-align:center;font-size:.77rem;flex-shrink:0}
+.sb-badge{margin-left:auto;background:var(--red);color:#fff;border-radius:20px;
+  font-size:.6rem;font-weight:700;padding:1px 6px;display:none}
+.sb-badge.show{display:inline-block}
+.sb-foot{margin-top:auto;padding:12px 0;border-top:1px solid rgba(255,255,255,.07)}
+
+/* HEADER */
+.app-header{position:fixed;top:0;right:0;left:0;height:57px;background:#fff;
+  border-bottom:1px solid var(--line);display:flex;align-items:center;
+  padding:0 16px;gap:12px;z-index:50;box-shadow:0 1px 0 var(--line)}
+.hdr-menu{background:none;border:none;font-size:1.1rem;color:var(--muted);
+  padding:6px;border-radius:8px;transition:background .15s}
+.hdr-menu:hover{background:var(--soft)}
+.hdr-title{flex:1;font-size:.94rem;font-weight:800;color:var(--ink)}
+.hdr-sol{display:flex;align-items:center;gap:6px;background:var(--soft);
+  border:1px solid var(--line);border-radius:20px;padding:4px 10px;
+  font-size:.72rem;font-weight:600;color:var(--muted)}
+.hdr-user{width:33px;height:33px;border-radius:50%;background:var(--navy);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;
+  flex-shrink:0;cursor:pointer;user-select:none}
+
+/* MAIN */
+.app-main{margin-top:57px;padding:22px 16px 70px;min-height:calc(100vh - 57px)}
+.section{display:none}.section.active{display:block}
+.pg-title{font-size:1rem;font-weight:800;color:var(--ink);margin-bottom:18px;
+  display:flex;align-items:center;gap:8px}
+.pg-title i{color:var(--blue);font-size:.9rem}
+
+/* CARDS */
+.card{background:#fff;border-radius:14px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+.card-title{font-size:.81rem;font-weight:700;color:var(--ink);margin-bottom:14px;
+  display:flex;align-items:center;gap:8px}
+.card-title i{color:var(--blue)}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:16px}
+.stat-card{background:#fff;border-radius:12px;padding:13px 14px;
+  box-shadow:var(--shadow);border-left:4px solid}
+.stat-card.g{border-color:var(--green)}.stat-card.b{border-color:var(--blue)}
+.stat-card.r{border-color:var(--red)}.stat-card.o{border-color:var(--orange)}
+.stat-card.p{border-color:var(--purple)}
+.st-lbl{font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.st-val{font-size:1.45rem;font-weight:800;color:var(--ink);margin:3px 0;line-height:1}
+.st-sub{font-size:.67rem;color:var(--muted2)}
+
+/* TABLE */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:.76rem;white-space:nowrap}
+thead th{background:var(--soft);color:var(--muted);font-size:.67rem;font-weight:700;
+  padding:8px 10px;text-align:left;border-bottom:2px solid var(--line);
+  text-transform:uppercase;letter-spacing:.04em}
+tbody td{padding:9px 10px;border-bottom:1px solid var(--soft);color:var(--ink);vertical-align:middle}
+tbody tr:hover td{background:#fafbfc}
+.tha{text-align:center!important;width:76px;min-width:76px}
+
+/* ★ BOUTONS MODIFIER / SUPPRIMER ★ */
+.ag{display:flex;gap:5px;justify-content:center;align-items:center}
+.bi{width:30px;height:30px;border-radius:7px;border:none;display:inline-flex;
+  align-items:center;justify-content:center;font-size:.72rem;transition:all .15s;cursor:pointer}
+.bi.edit{background:var(--bsoft);color:var(--blue)}
+.bi.edit:hover{background:var(--blue);color:#fff;transform:scale(1.06)}
+.bi.del{background:var(--rsoft);color:var(--red)}
+.bi.del:hover{background:var(--red);color:#fff;transform:scale(1.06)}
+.bi.see{background:var(--gsoft);color:var(--green)}
+.bi.see:hover{background:var(--green);color:#fff;transform:scale(1.06)}
+.bi.ok{background:var(--gsoft);color:var(--green)}
+.bi.ok:hover{background:var(--green);color:#fff}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border-radius:8px;
+  border:none;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-p{background:var(--green);color:#fff}.btn-p:hover{background:var(--gdark)}
+.btn-b{background:var(--blue);color:#fff}.btn-b:hover{background:#3358c4}
+.btn-d{background:var(--red);color:#fff}.btn-d:hover{background:#c0424e}
+.btn-g{background:var(--soft);color:var(--ink);border:1px solid var(--line)}.btn-g:hover{background:var(--line)}
+.btn-sm{padding:6px 12px;font-size:.72rem}
+
+/* BADGES */
+.bdg{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;
+  font-size:.63rem;font-weight:700;white-space:nowrap}
+.bdg-g{background:var(--gsoft);color:#056b51}
+.bdg-b{background:var(--bsoft);color:#2a50b5}
+.bdg-o{background:var(--osoft);color:#8a5020}
+.bdg-r{background:var(--rsoft);color:#94323c}
+.bdg-x{background:var(--soft);color:var(--muted)}
+
+/* FORM */
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:.71rem;font-weight:700;color:var(--muted);
+  margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.fg input,.fg select,.fg textarea{width:100%;padding:9px 12px;border:1.5px solid var(--line);
+  border-radius:9px;font-size:.82rem;background:var(--soft);color:var(--ink);transition:border-color .15s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--blue);background:#fff}
+.fg textarea{resize:vertical;min-height:68px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.finfo{background:var(--gsoft);border-radius:10px;padding:12px;margin-bottom:12px}
+.frow{display:flex;justify-content:space-between;padding:3px 0;
+  border-bottom:1px solid rgba(0,163,127,.12);font-size:.76rem}
+.frow:last-child{border:none}
+.flbl{color:#056b51;font-weight:600}.fval{color:var(--ink);font-weight:700}
+
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.56);z-index:200;
+  display:none;align-items:center;justify-content:center;padding:1rem}
+.mo.show{display:flex}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:500px;
+  max-height:90vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.28)}
+.mhdr{padding:15px 20px 11px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;background:#fff;z-index:1}
+.mhdr h3{font-size:.9rem;font-weight:700;color:var(--ink)}
+.mclose{background:none;border:none;font-size:1rem;color:var(--muted);
+  padding:4px;border-radius:6px;cursor:pointer}
+.mclose:hover{background:var(--soft)}
+.mbody{padding:18px 20px}
+.mfoot{padding:11px 20px;border-top:1px solid var(--line);display:flex;gap:8px;
+  justify-content:flex-end;position:sticky;bottom:0;background:#fff}
+.confirm-box{background:#fff;border-radius:16px;max-width:316px;width:92%;
+  padding:28px 22px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.28)}
+.ci{font-size:2.8rem;color:var(--red);margin-bottom:12px}
+.confirm-box h3{font-size:.95rem;margin-bottom:6px}
+.confirm-box p{font-size:.78rem;color:var(--muted);margin-bottom:20px}
+
+/* ALERT ITEMS */
+.ai{border-radius:10px;padding:11px 14px;margin-bottom:8px;
+  display:flex;align-items:flex-start;gap:10px;border-left:4px solid var(--line)}
+.ai.unread{background:#f7f9ff;border-left-color:var(--blue)}
+.ai.read{background:var(--soft);opacity:.72}
+.ai.tr{border-left-color:var(--red)}.ai.ts{border-left-color:var(--green)}
+.ai.tw2{border-left-color:var(--orange)}.ai.ti{border-left-color:var(--blue)}
+.ai-ic{font-size:.95rem;margin-top:2px;flex-shrink:0}
+.ai-msg{font-size:.79rem;font-weight:600;color:var(--ink)}
+.ai-dt{font-size:.67rem;color:var(--muted2);margin-top:2px}
+.ai-ac{margin-left:auto;display:flex;gap:4px}
+
+/* TOAST */
+.tw-wrap{position:fixed;bottom:16px;right:16px;z-index:9999;
+  display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.tst{padding:10px 15px;border-radius:10px;font-size:.78rem;font-weight:600;color:#fff;
+  box-shadow:0 8px 24px rgba(0,0,0,.22);display:flex;align-items:center;gap:8px;
+  pointer-events:auto;animation:tstin .25s ease}
+.tst.success{background:var(--green)}.tst.error{background:var(--red)}
+.tst.info{background:var(--blue)}.tst.warning{background:var(--orange)}
+@keyframes tstin{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
+
+/* PROGRESS */
+.prg{background:var(--line);border-radius:20px;height:7px;overflow:hidden}
+.prg-f{height:100%;background:linear-gradient(90deg,var(--blue),#6698ff);
+  border-radius:20px;transition:width .4s}
+
+/* MISC */
+.empty{text-align:center;padding:3rem 1rem;color:var(--muted2)}
+.empty i{font-size:2.5rem;opacity:.4;margin-bottom:10px;display:block}
+.empty p{font-size:.81rem}
+.sch{display:flex;align-items:center;gap:8px;background:var(--soft);
+  border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;margin-bottom:14px}
+.sch i{color:var(--muted2);flex-shrink:0}
+.sch input{border:none;background:none;outline:none;flex:1;font-size:.81rem;color:var(--ink)}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;gap:8px;flex-wrap:wrap}
+.tabs{display:flex;gap:4px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px}
+.tab{padding:6px 13px;border-radius:8px;border:none;cursor:pointer;font-size:.74rem;
+  font-weight:600;white-space:nowrap;background:var(--soft);color:var(--muted);transition:all .15s}
+.tab.active{background:var(--blue);color:#fff}
+.drow{display:flex;justify-content:space-between;padding:6px 0;
+  border-bottom:1px solid var(--soft);font-size:.78rem}
+.drow:last-child{border:none}
+.dlbl{color:var(--muted);font-weight:600}.dval{color:var(--ink);font-weight:600;text-align:right}
+
+@media(min-width:700px){
+  .sidebar{left:0}.app-header{left:262px}.app-main{margin-left:262px}
+  .hdr-menu{display:none}.stats-grid{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:1060px){.stats-grid{grid-template-columns:repeat(5,1fr)}
+  .app-main{padding:26px 28px 70px}}
+/* SYNC STATUS DOT */
+.sync-dot{width:26px;height:26px;border-radius:50%;background:var(--muted2);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  flex-shrink:0;transition:background .3s;border:2px solid rgba(255,255,255,.3);
+  box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.sync-dot:hover{opacity:.85;transform:scale(1.08)}
+/* LOADING OVERLAY */
+#loadOverlay{position:fixed;inset:0;background:var(--navy);z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff}
+#loadOverlay .lo-logo{font-size:3rem}
+#loadOverlay .lo-title{font-size:1rem;font-weight:700;opacity:.9}
+#loadOverlay .lo-msg{font-size:.78rem;opacity:.55;text-align:center}
+#loadOverlay .lo-spin{width:36px;height:36px;border:3px solid rgba(255,255,255,.2);
+  border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media print{.sidebar,.app-header,.tw-wrap{display:none!important}
+  .app-main{margin:0;padding:0}.card{box-shadow:none;border:1px solid #ddd}}
+</style>
+</head>
+<body>
+
+<div class="tw-wrap" id="TWrap"></div>
+
+<!-- Loading overlay Firebase -->
+<div id="loadOverlay">
+  <div class="lo-logo">💰</div>
+  <div class="lo-title">Evens-Motivation-Sòl</div>
+  <div class="lo-spin"></div>
+  <div class="lo-msg" id="loMsg">Connexion à Firebase…</div>
+</div>
+
+<!-- ===== LOGIN ===== -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">💰</div>
+    <h1>Evens-Motivation-Sòl</h1>
+    <p>Plateforme de Gestion de Sòl</p>
+    <div id="loginError"></div>
+    <div class="fg"><label>Identifiant</label><input id="liU" type="text" placeholder="admin"></div>
+    <div class="fg"><label>Mot de passe</label><input id="liP" type="password" placeholder="••••••"></div>
+    <button class="btn btn-p" style="width:100%;justify-content:center;padding:10px" onclick="doLogin()">
+      <i class="fas fa-sign-in-alt"></i> Connexion
+    </button>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+<div id="overlay" onclick="closeSB()"></div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="SB">
+  <div class="sb-head"><h2>💰 Evens-Motivation-Sòl</h2><p id="sbRole">Administrateur</p></div>
+  <div class="sb-sol" onclick="showS('sols')" id="sbSol">
+    <span class="sol-dot sol-dot--default" id="sbDot"></span>
+    <span class="sb-sol-name" id="sbSolNm">Aucun Sòl actif</span>
+    <i class="fas fa-chevron-right" style="font-size:.6rem;color:rgba(255,255,255,.25);margin-left:auto"></i>
+  </div>
+  <div class="sb-lbl">Principal</div>
+  <div class="sb-item active" onclick="showS('dashboard')"><i class="fas fa-tachometer-alt"></i> Tableau de bord</div>
+  <div class="sb-lbl">Sòl & Membres</div>
+  <div class="sb-item" onclick="showS('sols')"><i class="fas fa-circle-nodes"></i> Gestion des Sòl</div>
+  <div class="sb-item" onclick="showS('membres')"><i class="fas fa-users"></i> Membres</div>
+  <div class="sb-item" onclick="showS('mains')"><i class="fas fa-hand-holding-dollar"></i> Gestion des mains</div>
+  <div class="sb-lbl">Finance</div>
+  <div class="sb-item" onclick="showS('paiements')"><i class="fas fa-money-bill-wave"></i> Paiements</div>
+  <div class="sb-item" onclick="showS('distributions')"><i class="fas fa-share-from-square"></i> Distributions</div>
+  <div class="sb-item" onclick="showS('prets')"><i class="fas fa-hand-holding-usd"></i> Prêts & remboursements</div>
+  <div class="sb-item" onclick="showS('retards')"><i class="fas fa-clock"></i> Retards</div>
+  <div class="sb-item" onclick="showS('abandons')"><i class="fas fa-user-minus"></i> Abandons</div>
+  <div class="sb-lbl">Suivi</div>
+  <div class="sb-item" onclick="showS('beneficiaires')"><i class="fas fa-user-check"></i> Bénéficiaires</div>
+  <div class="sb-item" onclick="showS('alertes')"><i class="fas fa-bell"></i> Alertes <span class="sb-badge" id="aBdg">0</span></div>
+  <div class="sb-item" onclick="showS('historique')"><i class="fas fa-history"></i> Historique</div>
+  <div class="sb-lbl">Outils</div>
+  <div class="sb-item" onclick="showS('recherche')"><i class="fas fa-search"></i> Recherche</div>
+  <div class="sb-item" onclick="showS('rapports')"><i class="fas fa-file-pdf"></i> Rapports</div>
+  <div class="sb-lbl">Système</div>
+  <div class="sb-item" onclick="showS('parametres')"><i class="fas fa-cog"></i> Paramètres</div>
+  <div class="sb-item" onclick="showS('securite')"><i class="fas fa-shield-alt"></i> Sécurité</div>
+  <div class="sb-foot">
+    <div class="sb-item" onclick="doLogout()" style="color:#e57373"><i class="fas fa-sign-out-alt"></i> Déconnexion</div>
+  </div>
+</nav>
+
+<!-- HEADER -->
+<header class="app-header">
+  <button class="hdr-menu" onclick="toggleSB()"><i class="fas fa-bars"></i></button>
+  <span class="hdr-title" id="HDR">Tableau de bord</span>
+  <div class="hdr-sol" id="hdrSol" style="display:none">
+    <span class="sol-dot sol-dot--actif" id="hdrDot"></span><span id="hdrSolNm"></span>
+  </div>
+  <div class="sync-dot" id="syncDot" onclick="manualSync()" title="Synchronisation Firebase">
+    <i class="fas fa-spinner fa-spin" style="font-size:.6rem;color:#fff"></i>
+  </div>
+  <div class="hdr-user" id="hdrUser">A</div>
+</header>
+
+<!-- MAIN -->
+<main class="app-main">
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="section active">
+  <div class="pg-title"><i class="fas fa-tachometer-alt"></i> Tableau de bord</div>
+  <div class="stats-grid" id="dStats"></div>
+  <div class="card"><div class="card-title"><i class="fas fa-chart-line"></i> Progression des Sòl</div><div id="dProg"></div></div>
+  <div class="card"><div class="card-title"><i class="fas fa-bell" style="color:var(--orange)"></i> Alertes récentes</div><div id="dAlerts"></div></div>
+  <div class="card"><div class="card-title"><i class="fas fa-clock" style="color:var(--red)"></i> Retards à traiter</div><div id="dRetards"></div></div>
+</section>
+
+<!-- SOLS -->
+<section id="sols" class="section">
+  <div class="sec-hdr">
+    <div class="pg-title" style="margin:0"><i class="fas fa-circle-nodes"></i> Gestion des Sòl</div>
+    <button class="btn btn-p btn-sm" onclick="oM('sol')"><i class="fas fa-plus"></i> Nouveau Sòl</button>
+  </div>
+  <div class="card"><div class="tw"><table>
+    <thead><tr><th>Nom</th><th>Début</th><th>Fin</th><th>Périodicité</th><th>Montant/main</th><th>Tèt Kaye</th><th>Statut</th><th class="tha">Actions</th></tr></thead>
+    <tbody id="tSols"></tbody>
+  </table></div></div>
+</section>
+
+<!-- MEMBRES -->
+<section id="membres" class="section">
+  <div class="sec-hdr">
+    <div class="pg-title" style="margin:0"><i class="fas fa-users"></i> Membres</div>
+    <button class="btn btn-p btn-sm" onclick="oM('membre')"><i class="fas fa-user-plus"></i> Nouveau</button>
+  </div>
+  <div class="sch"><i class="fas fa-search"></i><input id="memQ" placeholder="Nom, téléphone, profession…" oninput="rMembres()"></div>
+  <div class="card"><div class="tw"><table>
+    <thead><tr><th>Nom & Prénom</th><th>Téléphone</th><th>Sòl</th><th>Mains</th><th>Statut</th><th class="tha">Actions</th></tr></thead>
+    <tbody id="tMembres"></tbody>
+  </table></div></div>
+</section>
+
+<!-- MAINS -->
+<section id="mains" class="section">
+  <div class="sec-hdr">
+    <div class="pg-title" style="margin:0"><i class="fas fa-hand-holding-dollar"></i> Gestion des mains</div>
+    <button class="btn btn-p btn-sm" onclick="oM('main')"><i class="fas fa-plus"></i> Ajouter</button>
+  </div>
+  <div class="card"><div class="tw"><table>
+    <thead><tr><th>Membre</th><th>Sòl</th><th>Positions</th><th>Nb</th><th>Brut</th><th>Tèt Kaye</th><th>Net</th><th>Date prévue</th><th>Statut</th><th class="tha">Actions</th></tr></thead>
+    <tbody id="tMains"></tbody>
+  </table></div></div>
+</section>
+
+<!-- PAIEMENTS -->
+<section id="paiements" class="section">
+  <div class="sec-hdr">
+    <div class="pg-title" style="margin:0"><i class="fas fa-money-bill-wave"></i> Paiements</div>
+    <button class="btn btn-p btn-sm" onclick="oM('paiement')"><i class="fas fa-plus"></i> Enregistrer</button>
+  </div>
+  <div class="card"><div class="tw"><table>
+    <thead><tr><th>Date</th><th>Membre</th><th>Attendu</th><th>Payé</th><th>Différence</th><th>Report</th><th>Restant</th><th>Mode</th><th>Statut</th><th class="tha">Actions</th></tr></thead>
+    <tbody id="tPaie"></tbody>
+  </table></div></div>
+</section>
+
+<!-- DISTRIBUTIONS -->
+<section id="distributions" class="section">
+  <div class="sec-hdr">
+    <div class="pg-title" style="margin:0"><i class="fas fa-share-from-square"></i> Distributions</div>
+    <button class="btn btn-p btn-sm" onclick="oM('distribution')"><i class="fas fa-plus"></i> Enregistrer</button>
+  </div>
+  <div class="card"><div class="tw"><table>
+    <thead><tr><th>Date</th><th>Membre</th><th>Positions</th><th>Nb</th><th>Brut</th><th>Tèt Kaye</th><th>Net</th><th>Mode</th><th class="tha">Actions</th></tr></thead>
+    <tbody id="tDist"></tbody>
+  </table></div></div>
+</section>
+
+<!-- PRÊTS -->
+<section id="prets" class="section">
+  <div class="sec-hdr">
+    <div class="pg-title" style="margin:0"><i class="fas fa-hand-holding-usd"></i> Prêts & remboursements</div>
+    <button class="btn btn-p btn-sm" onclick="oM('pret')"><i class="fas fa-plus"></i> Nouveau prêt</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="fPrets('tous',this)">Tous</button>
+    <button class="tab" onclick="fPrets('actif',this)">Actifs</button>
+    <button class="tab" onclick="fPrets('remboursé',this)">Remboursés</button>
+    <button class="tab" onclick="fPrets('retard',this)">En retard</button>
+  </div>
+  <div class="card"><div class="tw"><table>
+    <thead><tr><th>Date</th><th>Membre</th><th>Montant</th><th>Motif</th><th>Remboursé</th><th>Restant</th><th>Échéance</th><th>Statut</th><th class="tha">Actions</th></tr></thead>
+    <tbody id="tPrets"></tbody>
+  </table></div></div>
+  <div class="sec-hdr" style="margin-top:18px">
+    <div class="card-title" style="margin:0"><i class="fas fa-undo-alt"></i> Remboursements</div>
+    <button class="btn btn-g btn-sm" onclick="oM('remboursement')"><i class="fas fa-plus"></i> Enregistrer</button>
+  </div>
+  <div class="card"><div class="tw"><table>
+    <thead><tr><th>Date</th><th>Membre</th><th>Prêt référence</th><th>Montant</th><th>Observations</th><th class="tha">Actions</th></tr></thead>
+    <tbody id="tRemb"></tbody>
+  </table></div></div>
+</section>
+
+<!-- RETARDS -->
+<section id="retards" class="section">
+  <div class="sec-hdr">
+    <div class="pg-title" style="margin:0;color:var(--red)"><i class="fas fa-clock"></i> Paiements en retard</div>
+    <button class="btn btn-g btn-sm" onclick="detectRet();rRetards()"><i class="fas fa-sync"></i> Actualiser</button>
+  </div>
+  <div class="card"><div class="tw"><table>
+    <thead><tr><th>Membre</th><th>Sòl</th><th>Date prévue</th><th>Montant dû</th><th>Jours</th><th class="tha">Actions</th></tr></thead>
+    <tbody id="tRet"></tbody>
+  </table></div></div>
+</section>
+
+<!-- ABANDONS -->
+<section id="abandons" class="section">
+  <div class="sec-hdr">
+    <div class="pg-title" style="margin:0"><i class="fas fa-user-minus"></i> Abandons en cours de Sòl</div>
+    <button class="btn btn-p btn-sm" onclick="oM('abandon')"><i class="fas fa-plus"></i> Enregistrer</button>
+  </div>
+  <div class="card"><div class="tw"><table>
+    <thead><tr><th>Membre</th><th>Sòl</th><th>Date</th><th>Motif</th><th>Situation</th><th>Solde</th><th class="tha">Actions</th></tr></thead>
+    <tbody id="tAban"></tbody>
+  </table></div></div>
+</section>
+
+<!-- BÉNÉFICIAIRES -->
+<section id="beneficiaires" class="section">
+  <div class="pg-title"><i class="fas fa-user-check"></i> Historique des bénéficiaires</div>
+  <div class="card"><div class="tw"><table>
+    <thead><tr><th>Membre</th><th>Sòl</th><th>Positions</th><th>Nb</th><th>Date</th><th>Brut</th><th>Tèt Kaye</th><th>Net</th><th>Mode</th><th>Responsable</th><th class="tha">Actions</th></tr></thead>
+    <tbody id="tBen"></tbody>
+  </table></div></div>
+</section>
+
+<!-- ALERTES -->
+<section id="alertes" class="section">
+  <div class="sec-hdr">
+    <div class="pg-title" style="margin:0"><i class="fas fa-bell"></i> Alertes & notifications</div>
+    <button class="btn btn-g btn-sm" onclick="markAll()"><i class="fas fa-check-double"></i> Tout lire</button>
+  </div>
+  <div id="aList"></div>
+</section>
+
+<!-- HISTORIQUE -->
+<section id="historique" class="section">
+  <div class="pg-title"><i class="fas fa-history"></i> Historique complet</div>
+  <div class="card"><div class="tw"><table>
+    <thead><tr><th>Date & heure</th><th>Action</th><th>Module</th><th>Détail</th><th>Auteur</th><th class="tha">Actions</th></tr></thead>
+    <tbody id="tHist"></tbody>
+  </table></div></div>
+</section>
+
+<!-- RECHERCHE -->
+<section id="recherche" class="section">
+  <div class="pg-title"><i class="fas fa-search"></i> Recherche intelligente</div>
+  <div class="card">
+    <div class="sch" style="margin:0"><i class="fas fa-search" style="color:var(--blue)"></i>
+      <input id="gSQ" placeholder="Nom, téléphone, montant, date…" oninput="doSearch()"></div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="setSCat('tous',this)">Tous</button>
+    <button class="tab" onclick="setSCat('membres',this)">Membres</button>
+    <button class="tab" onclick="setSCat('paiements',this)">Paiements</button>
+    <button class="tab" onclick="setSCat('prets',this)">Prêts</button>
+    <button class="tab" onclick="setSCat('distributions',this)">Distributions</button>
+  </div>
+  <div id="sRes"></div>
+</section>
+
+<!-- RAPPORTS -->
+<section id="rapports" class="section">
+  <div class="pg-title"><i class="fas fa-file-pdf"></i> Rapports</div>
+  <div class="card">
+    <div class="card-title"><i class="fas fa-sliders-h"></i> Paramètres du rapport</div>
+    <div class="fg"><label>Type</label><select id="rType">
+      <option value="membres">Membres</option>
+      <option value="paiements">Paiements</option>
+      <option value="distributions">Distributions / Bénéficiaires</option>
+      <option value="prets">Prêts</option>
+      <option value="retards">Retards</option>
+      <option value="abandons">Abandons</option>
+      <option value="complet">Rapport complet membres</option>
+    </select></div>
+    <div class="fr">
+      <div class="fg"><label>Date début</label><input type="date" id="rD1"></div>
+      <div class="fg"><label>Date fin</label><input type="date" id="rD2"></div>
+    </div>
+    <div class="fg"><label>Sòl</label><select id="rSol"><option value="">Tous les Sòl</option></select></div>
+    <button class="btn btn-b" onclick="genR()"><i class="fas fa-print"></i> Générer & imprimer</button>
+  </div>
+</section>
+
+<!-- PARAMÈTRES -->
+<section id="parametres" class="section">
+  <div class="pg-title"><i class="fas fa-cog"></i> Paramètres</div>
+  <div class="card">
+    <div class="card-title"><i class="fas fa-sliders-h"></i> Configuration générale</div>
+    <div class="fg"><label>Devise</label><select id="pDev">
+      <option value="USD">Dollar américain (USD $)</option>
+      <option value="HTG">Gourde haïtienne (HTG G)</option>
+      <option value="EUR">Euro (EUR €)</option>
+    </select></div>
+    <div class="fr">
+      <div class="fg"><label>Tèt Kaye / main (défaut)</label><input type="number" id="pTK" min="0" placeholder="Ex: 10"></div>
+      <div class="fg"><label>Paiements min. pour prêt</label><input type="number" id="pMP" min="1" placeholder="Ex: 3"></div>
+    </div>
+    <div class="fg"><label>Montant max prêt (% total attendu)</label><input type="number" id="pMX" min="0" max="100" placeholder="Ex: 50"></div>
+    <button class="btn btn-p" onclick="saveP()"><i class="fas fa-save"></i> Enregistrer</button>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-title"><i class="fas fa-database"></i> Gestion des données</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-g btn-sm" onclick="expDB()"><i class="fas fa-download"></i> Exporter JSON</button>
+      <button class="btn btn-d btn-sm" onclick="rstDB()"><i class="fas fa-trash"></i> Réinitialiser tout</button>
+    </div>
+  </div>
+</section>
+
+<!-- SÉCURITÉ -->
+<section id="securite" class="section">
+  <div class="pg-title"><i class="fas fa-shield-alt"></i> Sécurité & utilisateurs</div>
+  <div class="sec-hdr">
+    <div class="card-title" style="margin:0">Utilisateurs du système</div>
+    <button class="btn btn-p btn-sm" onclick="oM('utilisateur')"><i class="fas fa-user-plus"></i> Ajouter</button>
+  </div>
+  <div class="card"><div class="tw"><table>
+    <thead><tr><th>Nom</th><th>Identifiant</th><th>Rôle</th><th>Statut</th><th class="tha">Actions</th></tr></thead>
+    <tbody id="tUsers"></tbody>
+  </table></div></div>
+  <div class="card" style="margin-top:14px">
+    <div class="card-title"><i class="fas fa-journal-whills"></i> Journal d'audit</div>
+    <div class="tw"><table>
+      <thead><tr><th>Date & heure</th><th>Utilisateur</th><th>Action</th><th class="tha">Actions</th></tr></thead>
+      <tbody id="tAudit"></tbody>
+    </table></div>
+  </div>
+</section>
+
+</main>
+</div><!-- /app -->
+
+<!-- ===== MODALS ===== -->
+
+<!-- Sol -->
+<div class="mo" id="moSol">
+  <div class="modal">
+    <div class="mhdr"><h3 id="tSol">Nouveau Sòl</h3><button class="mclose" onclick="cM('sol')"><i class="fas fa-times"></i></button></div>
+    <div class="mbody">
+      <input type="hidden" id="fSolId">
+      <div class="fg"><label>Nom du Sòl *</label><input id="fSolNm" placeholder="Ex: Evens-Motivation-Sòl"></div>
+      <div class="fr">
+        <div class="fg"><label>Date début *</label><input type="date" id="fSolS"></div>
+        <div class="fg"><label>Date fin</label><input type="date" id="fSolE"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Périodicité *</label><select id="fSolFq">
+          <option value="quotidienne">Quotidienne</option><option value="hebdomadaire">Hebdomadaire</option>
+          <option value="mensuelle" selected>Mensuelle</option><option value="annuelle">Annuelle</option>
+        </select></div>
+        <div class="fg"><label>Montant / main *</label><input type="number" id="fSolAm" min="0" placeholder="Ex: 100"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Tèt Kaye / main</label><input type="number" id="fSolTK" min="0" placeholder="Ex: 10"></div>
+        <div class="fg"><label>Nb max mains</label><input type="number" id="fSolMx" min="1" placeholder="Ex: 12"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Devise</label><select id="fSolCy">
+          <option value="USD">USD ($)</option><option value="HTG">HTG (G)</option><option value="EUR">EUR (€)</option>
+        </select></div>
+        <div class="fg"><label>Statut</label><select id="fSolSt">
+          <option value="actif">Actif</option><option value="suspendu">Suspendu</option><option value="terminé">Terminé</option>
+        </select></div>
+      </div>
+      <div class="fg"><label>Description</label><textarea id="fSolDs" placeholder="Description optionnelle…"></textarea></div>
+    </div>
+    <div class="mfoot"><button class="btn btn-g" onclick="cM('sol')">Annuler</button><button class="btn btn-p" onclick="saveSol()"><i class="fas fa-save"></i> Enregistrer</button></div>
+  </div>
+</div>
+
+<!-- Membre -->
+<div class="mo" id="moMembre">
+  <div class="modal">
+    <div class="mhdr"><h3 id="tMembre">Nouveau membre</h3><button class="mclose" onclick="cM('membre')"><i class="fas fa-times"></i></button></div>
+    <div class="mbody">
+      <input type="hidden" id="fMemId">
+      <div class="fr"><div class="fg"><label>Nom *</label><input id="fMemNm" placeholder="Nom"></div><div class="fg"><label>Prénom *</label><input id="fMemPn" placeholder="Prénom"></div></div>
+      <div class="fr">
+        <div class="fg"><label>Sexe</label><select id="fMemSx"><option value="M">Masculin</option><option value="F">Féminin</option></select></div>
+        <div class="fg"><label>Téléphone</label><input id="fMemTl" type="tel" placeholder="+509 3700-0000"></div>
+      </div>
+      <div class="fg"><label>Sòl *</label><select id="fMemSol"></select></div>
+      <div class="fr">
+        <div class="fg"><label>Profession</label><input id="fMemPf" placeholder="Profession"></div>
+        <div class="fg"><label>Date inscription</label><input type="date" id="fMemDt"></div>
+      </div>
+      <div class="fg"><label>Adresse</label><input id="fMemAd" placeholder="Adresse"></div>
+      <div class="fg"><label>Statut</label><select id="fMemSt" onchange="togAbF()">
+        <option value="actif">Actif</option><option value="inactif">Inactif</option>
+        <option value="abandonné">Abandonné</option><option value="terminé">Terminé</option>
+      </select></div>
+      <div id="abF" style="display:none">
+        <div class="fr">
+          <div class="fg"><label>Date d'abandon</label><input type="date" id="fMemAD"></div>
+          <div class="fg"><label>Motif abandon</label><input id="fMemAM" placeholder="Motif…"></div>
+        </div>
+      </div>
+      <div class="fg"><label>Observations</label><textarea id="fMemOb" placeholder="…"></textarea></div>
+    </div>
+    <div class="mfoot"><button class="btn btn-g" onclick="cM('membre')">Annuler</button><button class="btn btn-p" onclick="saveMem()"><i class="fas fa-save"></i> Enregistrer</button></div>
+  </div>
+</div>
+
+<!-- Main (hand) -->
+<div class="mo" id="moMain">
+  <div class="modal">
+    <div class="mhdr"><h3 id="tMain">Ajouter une main</h3><button class="mclose" onclick="cM('main')"><i class="fas fa-times"></i></button></div>
+    <div class="mbody">
+      <input type="hidden" id="fMnId">
+      <div class="fg"><label>Membre *</label><select id="fMnMem" onchange="calcMn()"></select></div>
+      <div class="fr">
+        <div class="fg"><label>Position(s) *</label><input id="fMnPos" placeholder="Ex: 3 ou 3,4,5" oninput="calcMn()"></div>
+        <div class="fg"><label>Nb mains</label><input type="number" id="fMnNb" value="1" readonly style="background:#f1f5f9"></div>
+      </div>
+      <div class="fg"><label>Date prévue</label><input type="date" id="fMnDt"></div>
+      <div class="finfo" id="fMnCalc">
+        <div class="frow"><span class="flbl">Montant brut</span><span class="fval" id="cBrut">—</span></div>
+        <div class="frow"><span class="flbl">Tèt Kaye</span><span class="fval" id="cTK">—</span></div>
+        <div class="frow"><span class="flbl">Montant net</span><span class="fval" id="cNet" style="color:var(--green)">—</span></div>
+      </div>
+      <div class="fg"><label>Statut</label><select id="fMnSt">
+        <option value="pending">En attente</option><option value="funded">Financée</option><option value="distributed">Distribuée</option>
+      </select></div>
+    </div>
+    <div class="mfoot"><button class="btn btn-g" onclick="cM('main')">Annuler</button><button class="btn btn-p" onclick="saveMn()"><i class="fas fa-save"></i> Enregistrer</button></div>
+  </div>
+</div>
+
+<!-- Paiement -->
+<div class="mo" id="moPaiement">
+  <div class="modal">
+    <div class="mhdr"><h3 id="tPai">Enregistrer un paiement</h3><button class="mclose" onclick="cM('paiement')"><i class="fas fa-times"></i></button></div>
+    <div class="mbody">
+      <input type="hidden" id="fPaId">
+      <div class="fr">
+        <div class="fg"><label>Date *</label><input type="date" id="fPaDt"></div>
+        <div class="fg"><label>Membre *</label><select id="fPaMem" onchange="calcPa()"></select></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Montant attendu</label><input type="number" id="fPaAt" readonly style="background:#f1f5f9"></div>
+        <div class="fg"><label>Montant payé *</label><input type="number" id="fPaPy" min="0" placeholder="Ex: 100" oninput="calcPa()"></div>
+      </div>
+      <div class="finfo">
+        <div class="frow"><span class="flbl">Différence</span><span class="fval" id="cDiff">—</span></div>
+        <div class="frow"><span class="flbl">Statut</span><span id="cStat" style="font-weight:700">—</span></div>
+      </div>
+      <div class="fg"><label>Mode de paiement</label><select id="fPaMd">
+        <option value="espèces">Espèces</option><option value="virement">Virement</option>
+        <option value="mobile_money">Mobile Money</option><option value="chèque">Chèque</option>
+      </select></div>
+      <div class="fg"><label>Observations</label><textarea id="fPaOb" placeholder="…"></textarea></div>
+    </div>
+    <div class="mfoot"><button class="btn btn-g" onclick="cM('paiement')">Annuler</button><button class="btn btn-p" onclick="savePa()"><i class="fas fa-check"></i> Valider</button></div>
+  </div>
+</div>
+
+<!-- Distribution -->
+<div class="mo" id="moDistribution">
+  <div class="modal">
+    <div class="mhdr"><h3 id="tDist">Enregistrer une distribution</h3><button class="mclose" onclick="cM('distribution')"><i class="fas fa-times"></i></button></div>
+    <div class="mbody">
+      <input type="hidden" id="fDsId">
+      <div class="fr">
+        <div class="fg"><label>Date *</label><input type="date" id="fDsDt"></div>
+        <div class="fg"><label>Membre *</label><select id="fDsMem" onchange="loadHands()"></select></div>
+      </div>
+      <div class="fg"><label>Main(s) à distribuer</label><select id="fDsHnd" multiple style="height:90px" onchange="calcDs()"></select></div>
+      <div class="finfo">
+        <div class="frow"><span class="flbl">Nb mains</span><span class="fval" id="dNb">—</span></div>
+        <div class="frow"><span class="flbl">Montant brut</span><span class="fval" id="dBr">—</span></div>
+        <div class="frow"><span class="flbl">Tèt Kaye</span><span class="fval" id="dTK">—</span></div>
+        <div class="frow"><span class="flbl">Montant net</span><span class="fval" id="dNt" style="color:var(--green)">—</span></div>
+      </div>
+      <div class="fg"><label>Mode</label><select id="fDsMd">
+        <option value="espèces">Espèces</option><option value="virement">Virement</option><option value="mobile_money">Mobile Money</option>
+      </select></div>
+      <div class="fg"><label>Observations</label><textarea id="fDsOb" placeholder="…"></textarea></div>
+    </div>
+    <div class="mfoot"><button class="btn btn-g" onclick="cM('distribution')">Annuler</button><button class="btn btn-p" onclick="saveDs()"><i class="fas fa-check"></i> Valider</button></div>
+  </div>
+</div>
+
+<!-- Prêt -->
+<div class="mo" id="moPret">
+  <div class="modal">
+    <div class="mhdr"><h3 id="tPret">Nouveau prêt</h3><button class="mclose" onclick="cM('pret')"><i class="fas fa-times"></i></button></div>
+    <div class="mbody">
+      <input type="hidden" id="fPrId">
+      <div class="fr">
+        <div class="fg"><label>Date *</label><input type="date" id="fPrDt"></div>
+        <div class="fg"><label>Membre *</label><select id="fPrMem"></select></div>
+      </div>
+      <div class="fg"><label>Montant *</label><input type="number" id="fPrAm" min="0" placeholder="Ex: 500"></div>
+      <div class="fg"><label>Motif</label><input id="fPrMt" placeholder="Motif du prêt"></div>
+      <div class="fg"><label>Date d'échéance</label><input type="date" id="fPrEch"></div>
+      <div class="fg"><label>Statut</label><select id="fPrSt">
+        <option value="actif">Actif</option><option value="remboursé">Remboursé</option><option value="retard">En retard</option>
+      </select></div>
+      <div class="fg"><label>Observations</label><textarea id="fPrOb" placeholder="…"></textarea></div>
+    </div>
+    <div class="mfoot"><button class="btn btn-g" onclick="cM('pret')">Annuler</button><button class="btn btn-p" onclick="savePr()"><i class="fas fa-save"></i> Accorder</button></div>
+  </div>
+</div>
+
+<!-- Remboursement -->
+<div class="mo" id="moRemboursement">
+  <div class="modal">
+    <div class="mhdr"><h3 id="tRemb">Enregistrer un remboursement</h3><button class="mclose" onclick="cM('remboursement')"><i class="fas fa-times"></i></button></div>
+    <div class="mbody">
+      <input type="hidden" id="fRbId">
+      <div class="fr">
+        <div class="fg"><label>Date *</label><input type="date" id="fRbDt"></div>
+        <div class="fg"><label>Membre *</label><select id="fRbMem" onchange="loadPrets4R()"></select></div>
+      </div>
+      <div class="fg"><label>Prêt référence *</label><select id="fRbPr"></select></div>
+      <div class="fg"><label>Montant *</label><input type="number" id="fRbAm" min="0" placeholder="Ex: 200"></div>
+      <div class="fg"><label>Observations</label><textarea id="fRbOb" placeholder="…"></textarea></div>
+    </div>
+    <div class="mfoot"><button class="btn btn-g" onclick="cM('remboursement')">Annuler</button><button class="btn btn-p" onclick="saveRb()"><i class="fas fa-check"></i> Valider</button></div>
+  </div>
+</div>
+
+<!-- Abandon -->
+<div class="mo" id="moAbandon">
+  <div class="modal">
+    <div class="mhdr"><h3 id="tAban">Enregistrer un abandon</h3><button class="mclose" onclick="cM('abandon')"><i class="fas fa-times"></i></button></div>
+    <div class="mbody">
+      <input type="hidden" id="fAbId">
+      <div class="fr">
+        <div class="fg"><label>Date *</label><input type="date" id="fAbDt"></div>
+        <div class="fg"><label>Membre *</label><select id="fAbMem" onchange="calcAb()"></select></div>
+      </div>
+      <div class="fg"><label>Motif</label><input id="fAbMt" placeholder="Motif de l'abandon"></div>
+      <div id="abCalc" style="display:none">
+        <div class="finfo">
+          <div class="frow"><span class="flbl">Paiements effectués</span><span class="fval" id="abNP">—</span></div>
+          <div class="frow"><span class="flbl">Total cotisé</span><span class="fval" id="abTP">—</span></div>
+          <div class="frow"><span class="flbl">Mains reçues</span><span class="fval" id="abMR">—</span></div>
+          <div class="frow"><span class="flbl">Valeur reçue</span><span class="fval" id="abVR">—</span></div>
+          <div class="frow"><span class="flbl" style="font-size:.8rem;font-weight:800">Situation</span><span class="fval" id="abSit" style="font-size:.78rem">—</span></div>
+        </div>
+      </div>
+      <div class="fg"><label>Observations</label><textarea id="fAbOb" placeholder="…"></textarea></div>
+    </div>
+    <div class="mfoot"><button class="btn btn-g" onclick="cM('abandon')">Annuler</button><button class="btn btn-d" onclick="saveAb()"><i class="fas fa-save"></i> Enregistrer</button></div>
+  </div>
+</div>
+
+<!-- Utilisateur -->
+<div class="mo" id="moUtilisateur">
+  <div class="modal">
+    <div class="mhdr"><h3 id="tUser">Nouvel utilisateur</h3><button class="mclose" onclick="cM('utilisateur')"><i class="fas fa-times"></i></button></div>
+    <div class="mbody">
+      <input type="hidden" id="fUsId">
+      <div class="fr">
+        <div class="fg"><label>Nom complet *</label><input id="fUsNm" placeholder="Nom complet"></div>
+        <div class="fg"><label>Identifiant *</label><input id="fUsLg" placeholder="login"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Mot de passe *</label><input type="password" id="fUsMd" placeholder="••••••"></div>
+        <div class="fg"><label>Rôle</label><select id="fUsRl">
+          <option value="admin">Administrateur</option><option value="responsable">Responsable</option>
+          <option value="caissier">Caissier</option><option value="lecture">Lecture seule</option>
+        </select></div>
+      </div>
+      <div class="fg"><label>Statut</label><select id="fUsSt"><option value="actif">Actif</option><option value="inactif">Inactif</option></select></div>
+    </div>
+    <div class="mfoot"><button class="btn btn-g" onclick="cM('utilisateur')">Annuler</button><button class="btn btn-p" onclick="saveUs()"><i class="fas fa-save"></i> Enregistrer</button></div>
+  </div>
+</div>
+
+<!-- Confirm delete -->
+<div class="mo" id="moCfm">
+  <div class="confirm-box">
+    <div class="ci"><i class="fas fa-exclamation-triangle"></i></div>
+    <h3>Confirmer la suppression</h3>
+    <p id="cfmMsg">Êtes-vous sûr de vouloir supprimer cet élément ?</p>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-g" onclick="cM('cfm')">Annuler</button>
+      <button class="btn btn-d" id="cfmOk"><i class="fas fa-trash"></i> Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail view -->
+<div class="mo" id="moDet">
+  <div class="modal">
+    <div class="mhdr"><h3 id="detTtl">Détails</h3><button class="mclose" onclick="cM('det')"><i class="fas fa-times"></i></button></div>
+    <div class="mbody" id="detBdy"></div>
+    <div class="mfoot"><button class="btn btn-g" onclick="cM('det')">Fermer</button></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// STORE + FIREBASE REST API
+// ══════════════════════════════════════════════
+// ✅ Utilise fetch() directement — fonctionne depuis content://, file://, https://
+// ✅ Aucun SDK Firebase requis — zéro dépendance CDN pour le stockage
+
+const _fk =['AIzaSyAfRsc3Dsqb','P5LPaALTOi91y3Sez0hasQU'].join('');
+const _sa ={
+  e:['evensjean','1992@','gmail','.com'].join(''),
+  p:['Motiv','ation','-sol'].join('')
+};
+const FB_PROJECT='motivation-business-21069';
+const FS_COLL   ='evens-motivation-sol';
+const FS_DOC    ='main';
+const KEY       ='evens-motivation-sol:v1';
+
+// URLs des APIs REST Firebase
+const AUTH_URL=`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${_fk}`;
+const FS_URL  =`https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/${FS_COLL}/${FS_DOC}`;
+
+let _memDB   =null;   // cache mémoire (accès synchrone partout)
+let _idToken =null;   // token Firebase Auth (JWT)
+let _tokenExp=0;      // expiration du token (timestamp ms)
+let _online  =false;  // Firebase disponible ?
+let _syncTmr =null;   // timer debounce sauvegarde
+
+// ── Conversion JS ↔ format Firestore ──────────────────────────────
+function _toFS(v){
+  if(v===null||v===undefined) return{nullValue:null};
+  if(typeof v==='boolean')    return{booleanValue:v};
+  if(typeof v==='number')     return Number.isInteger(v)?{integerValue:''+v}:{doubleValue:v};
+  if(typeof v==='string')     return{stringValue:v};
+  if(Array.isArray(v))        return{arrayValue:{values:v.map(_toFS)}};
+  if(typeof v==='object'){
+    const f={};for(const k in v)if(Object.prototype.hasOwnProperty.call(v,k))f[k]=_toFS(v[k]);
+    return{mapValue:{fields:f}};
+  }
+  return{stringValue:''+v};
+}
+function _fromFS(v){
+  if(!v)                  return null;
+  if('nullValue'    in v) return null;
+  if('booleanValue' in v) return v.booleanValue;
+  if('integerValue' in v) return parseInt(v.integerValue,10);
+  if('doubleValue'  in v) return v.doubleValue;
+  if('stringValue'  in v) return v.stringValue;
+  if('arrayValue'   in v) return(v.arrayValue.values||[]).map(_fromFS);
+  if('mapValue'     in v){const o={};for(const k in(v.mapValue.fields||{}))o[k]=_fromFS(v.mapValue.fields[k]);return o;}
+  return null;
+}
+function _docToJS(doc){const o={};for(const k in(doc.fields||{}))o[k]=_fromFS(doc.fields[k]);return o;}
+function _jsToDoc(obj){const f={};for(const k in obj)if(Object.prototype.hasOwnProperty.call(obj,k))f[k]=_toFS(obj[k]);return{fields:f};}
+
+// ── Authentification Firebase (REST — pas de SDK) ─────────────────
+async function signInToFirebase(){
+  setLoMsg('Authentification sécurisée…');
+  try{
+    const authP=fetch(AUTH_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:_sa.e,password:_sa.p,returnSecureToken:true})
+    });
+    const tmOut=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),8000));
+    const res=await Promise.race([authP,tmOut]);
+    const data=await res.json();
+    if(data.error) throw new Error(data.error.message);
+    _idToken =data.idToken;
+    _tokenExp=Date.now()+parseInt(data.expiresIn,10)*1000;
+    _online  =true;
+    return true;
+  }catch(e){
+    console.warn('Firebase Auth échoué:',e.message);
+    _online=false;
+    const m=e.message||'';
+    if(m==='timeout')                                             toast('⏳ Firebase trop lent — mode hors ligne','warning');
+    else if(m.includes('EMAIL_NOT_FOUND')||
+            m.includes('INVALID_PASSWORD')||
+            m.includes('INVALID_LOGIN_CREDENTIALS'))             toast('⚠️ Compte Firebase non configuré — mode hors ligne','warning');
+    else if(m.includes('OPERATION_NOT_ALLOWED'))                 toast('⚠️ Email/Mot de passe non activé dans Firebase','warning');
+    else if(m==='Failed to fetch'||m.includes('NetworkError'))  toast('Pas de connexion Internet — mode hors ligne','warning');
+    else                                                          toast('Firebase indisponible — mode hors ligne','warning');
+    setSS('offline');
+    return false;
+  }
+}
+
+// Obtenir un token valide (re-auth automatique si expiré)
+async function getToken(){
+  if(_idToken&&Date.now()<_tokenExp-60000) return _idToken;
+  await signInToFirebase();
+  return _idToken;
+}
+
+// ── Lecture Firestore (REST) ──────────────────────────────────────
+async function readFromFS(){
+  const token=await getToken();
+  if(!token) throw new Error('Non authentifié');
+  const res=await fetch(FS_URL,{headers:{'Authorization':`Bearer ${token}`}});
+  if(res.status===404) return null; // document pas encore créé
+  if(!res.ok) throw new Error(`Firestore lecture ${res.status}`);
+  return _docToJS(await res.json());
+}
+
+// ── Écriture Firestore (REST) ─────────────────────────────────────
+async function writeToFS(data){
+  const token=await getToken();
+  if(!token) throw new Error('Non authentifié');
+  const res=await fetch(FS_URL,{
+    method:'PATCH',
+    headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
+    body:JSON.stringify(_jsToDoc(data))
+  });
+  if(!res.ok) throw new Error(`Firestore écriture ${res.status}`);
+}
+
+// ── Initialisation (minimaliste — fetch() ne nécessite rien) ──────
+function initFirebase(){
+  _online=true; // optimiste — confirmé à la première requête Auth
+}
+
+// ── Chargement initial ────────────────────────────────────────────
+async function loadFromFS(){
+  setSS('loading');
+  const authed=await signInToFirebase();
+  if(!authed){_memDB=getLocalDB();setSS('offline');return;}
+  setLoMsg('Chargement des données…');
+  try{
+    const data=await readFromFS();
+    if(data){
+      _memDB=Object.assign(dfDB(),data);
+      try{localStorage.setItem(KEY,JSON.stringify(_memDB));}catch(e){}
+      setSS('synced');
+    }else{
+      setLoMsg('Première connexion — migration…');
+      _memDB=getLocalDB();
+      await writeToFS(_memDB);
+      setSS('synced');
+    }
+  }catch(e){
+    console.warn('Firestore lecture échouée:',e.message);
+    _memDB=getLocalDB();
+    setSS('offline');
+  }
+}
+
+// ── Lecture synchrone (cache mémoire) ────────────────────────────
+function getDB(){if(!_memDB)_memDB=getLocalDB();return _memDB;}
+
+// ── Fallback localStorage ─────────────────────────────────────────
+function getLocalDB(){
+  try{const d=localStorage.getItem(KEY);if(d)return Object.assign(dfDB(),JSON.parse(d));}catch(e){}
+  return dfDB();
+}
+
+// ── Structure par défaut ──────────────────────────────────────────
+function dfDB(){
+  return{sols:[],activeSolId:null,members:[],hands:[],payments:[],
+    distributions:[],abandonments:[],loans:[],repayments:[],
+    alerts:[],activities:[],
+    utilisateurs:[{id:'u1',nom:'Administrateur',login:'admin',mdp:'admin123',role:'admin',statut:'actif',createdAt:ts()}],
+    audit:[],parametres:{devise:'USD',tk:10,minPay:3,maxPretPct:50}};
+}
+
+// ── Sauvegarde : localStorage immédiat + Firestore différé ────────
+function svDB(db){
+  _memDB=db;
+  try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){}
+  if(_online){
+    setSS('syncing');
+    clearTimeout(_syncTmr);
+    _syncTmr=setTimeout(async()=>{
+      try{await writeToFS(db);setSS('synced');}
+      catch(e){console.warn('Firestore écriture échouée:',e.message);setSS('offline');}
+    },700);
+  }
+}
+
+// ── Indicateur de synchronisation ────────────────────────────────
+function setSS(s){
+  const el=g('syncDot');if(!el)return;
+  const C={
+    synced: {bg:'#0aa37f',ic:'fa-cloud',         sp:false,tt:'☁️ Synchronisé avec Firebase'},
+    syncing:{bg:'#e58949',ic:'fa-cloud-arrow-up', sp:true, tt:'⏳ Synchronisation…'},
+    offline:{bg:'#d44f5b',ic:'fa-cloud-slash',    sp:false,tt:'🔴 Hors ligne — données locales'},
+    loading:{bg:'#4169d8',ic:'fa-spinner',        sp:true, tt:'⏳ Chargement Firebase…'},
+  };
+  const cfg=C[s]||C.offline;
+  el.style.background=cfg.bg;el.title=cfg.tt;
+  el.innerHTML=`<i class="fas ${cfg.ic}${cfg.sp?' fa-spin':''}" style="font-size:.6rem;color:#fff"></i>`;
+}
+
+// ── Rechargement manuel ───────────────────────────────────────────
+async function manualSync(){
+  const activeId=document.querySelector('.section.active')?.id||'dashboard';
+  await loadFromFS();
+  rSec(activeId);
+  toast(_online?'Données rechargées depuis Firebase':'Mode hors ligne — données locales',_online?'success':'warning');
+}
+
+// ── Utilitaires ───────────────────────────────────────────────────
+function setLoMsg(msg){const el=g('loMsg');if(el)el.textContent=msg;}
+function gId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
+function ts(){return new Date().toISOString();}
+
+// ══════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════
+function g(id){return document.getElementById(id);}
+function v(id){return g(id)?g(id).value:'';}
+function sv(id,val){if(g(id))g(id).value=(val===null||val===undefined)?'':val;}
+function fmt(n,cy){
+  const db=getDB();const c=cy||db.parametres.devise||'USD';
+  const sym=c==='USD'?'$':c==='EUR'?'€':'G';
+  return sym+parseFloat(n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+}
+function fd(d){if(!d)return'—';try{return new Date(d+'T12:00:00').toLocaleDateString('fr-FR');}catch(e){return d;}}
+function fdt(d){if(!d)return'—';try{return new Date(d).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'});}catch(e){return d;}}
+function mn(id,db){const m=db.members.find(x=>x.id===id);return m?`${m.nom} ${m.prenom}`:'—';}
+function sn(id,db){const s=db.sols.find(x=>x.id===id);return s?s.name:'—';}
+function cy(solId,db){const s=db.sols.find(x=>x.id===solId);return s?s.currency:'USD';}
+function bdg(s){
+  const m={actif:'bdg-g',active:'bdg-g',terminé:'bdg-x',suspendu:'bdg-o',inactif:'bdg-x',
+    abandonné:'bdg-r',pending:'bdg-o',funded:'bdg-b',distributed:'bdg-g',paid:'bdg-g',
+    exact:'bdg-g',excédent:'bdg-b',incomplet:'bdg-o',remboursé:'bdg-g',retard:'bdg-r',
+    créditeur:'bdg-g',débiteur:'bdg-r',nul:'bdg-x',admin:'bdg-r',responsable:'bdg-b',
+    caissier:'bdg-x',lecture:'bdg-x'};
+  const l={actif:'Actif',terminé:'Terminé',suspendu:'Suspendu',inactif:'Inactif',abandonné:'Abandonné',
+    pending:'En attente',funded:'Financée',distributed:'Distribuée',paid:'Payé',exact:'Exact',
+    excédent:'Excédent',incomplet:'Incomplet',remboursé:'Remboursé',retard:'En retard',
+    créditeur:'Créditeur',débiteur:'Débiteur',nul:'Solde nul',admin:'Admin',
+    responsable:'Responsable',caissier:'Caissier',lecture:'Lecture'};
+  return`<span class="bdg ${m[s]||'bdg-x'}">${l[s]||s||'—'}</span>`;
+}
+function lg(action,mod,detail){
+  const db=getDB();
+  db.activities.unshift({id:gId(),date:ts(),action,module:mod,detail,actor:CU?CU.nom:'Système'});
+  if(db.activities.length>300)db.activities=db.activities.slice(0,300);
+  svDB(db);
+}
+function adAlert(type,title,solId){
+  const db=getDB();
+  db.alerts.unshift({id:gId(),date:ts(),type,title,solId:solId||db.activeSolId,read:false});
+  if(db.alerts.length>200)db.alerts=db.alerts.slice(0,200);
+  svDB(db);updABdg();
+}
+function adAudit(action){
+  const db=getDB();
+  db.audit.unshift({id:gId(),date:ts(),user:CU?CU.nom:'?',action});
+  if(db.audit.length>100)db.audit=db.audit.slice(0,100);
+  svDB(db);
+}
+function updABdg(){
+  const db=getDB();const n=db.alerts.filter(a=>!a.read).length;
+  const el=g('aBdg');if(el){el.textContent=n;el.classList.toggle('show',n>0);}
+}
+
+// ══════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════
+let CU=null;
+function doLogin(){
+  const login=v('liU').trim();const mdp=v('liP');
+  const db=getDB();const u=db.utilisateurs.find(x=>x.login===login&&x.mdp===mdp&&x.statut==='actif');
+  if(!u){const el=g('loginError');el.textContent='Identifiant ou mot de passe incorrect.';el.style.display='block';return;}
+  CU=u;
+  // Montrer le loading overlay pendant le chargement Firebase
+  const lo=g('loadOverlay');
+  if(lo){lo.style.display='flex';setLoMsg('Chargement de vos données…');}
+  g('loginScreen').style.display='none';
+  g('hdrUser').textContent=u.nom.charAt(0).toUpperCase();
+  g('sbRole').textContent=u.role.charAt(0).toUpperCase()+u.role.slice(1);
+  adAudit('Connexion');
+  initApp(); // async — cache le loading overlay quand terminé
+}
+function doLogout(){
+  adAudit('Déconnexion');
+  _idToken =null;  // invalider le token Firebase Auth
+  _tokenExp=0;
+  _online  =false;
+  CU=null;
+  _memDB=null;     // vider le cache mémoire
+  g('app').style.display='none';
+  g('loginScreen').style.display='flex';
+  sv('liU','');sv('liP','');
+  g('loginError').style.display='none';
+}
+  g('loginError').style.display='none';
+}
+g('liP').onkeydown=e=>{if(e.key==='Enter')doLogin();};
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+const TTLS={dashboard:'Tableau de bord',sols:'Gestion des Sòl',membres:'Membres',
+  mains:'Gestion des mains',paiements:'Paiements',distributions:'Distributions',
+  prets:'Prêts & remboursements',retards:'Retards',abandons:'Abandons',
+  beneficiaires:'Bénéficiaires',alertes:'Alertes',historique:'Historique',
+  recherche:'Recherche',rapports:'Rapports',parametres:'Paramètres',securite:'Sécurité'};
+function showS(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('active'));
+  const el=g(id);if(el)el.classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(n=>{if(n.textContent.trim()===TTLS[id])n.classList.add('active');});
+  g('HDR').textContent=TTLS[id]||id;closeSB();rSec(id);
+}
+function rSec(id){
+  switch(id){
+    case'dashboard':rDash();break;case'sols':rSols();break;case'membres':rMembres();break;
+    case'mains':rMains();break;case'paiements':rPaie();break;case'distributions':rDist();break;
+    case'prets':rPrets();rRemb();break;case'retards':detectRet();rRetards();break;
+    case'abandons':rAbans();break;case'beneficiaires':rBen();break;case'alertes':rAlertes();break;
+    case'historique':rHist();break;case'rapports':ldRap();break;
+    case'parametres':ldP();break;case'securite':rUsers();rAudit();break;
+  }
+}
+function toggleSB(){g('SB').classList.toggle('open');g('overlay').classList.toggle('show');}
+function closeSB(){g('SB').classList.remove('open');g('overlay').classList.remove('show');}
+function updSBSol(){
+  const db=getDB();const s=db.sols.find(x=>x.id===db.activeSolId);
+  const nm=s?s.name:'Aucun Sòl actif';const st=s?s.status:'default';
+  sv('sbSolNm',nm);const d1=g('sbDot');if(d1)d1.className='sol-dot sol-dot--'+st;
+  const hs=g('hdrSol');const hn=g('hdrSolNm');const hd=g('hdrDot');
+  if(s&&hn){hn.textContent=nm;hd.className='sol-dot sol-dot--'+st;hs.style.display='flex';}
+  else if(hs)hs.style.display='none';
+}
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+function toast(msg,type='success'){
+  const w=g('TWrap');const el=document.createElement('div');
+  el.className=`tst ${type}`;
+  const ic={success:'check-circle',error:'times-circle',info:'info-circle',warning:'exclamation-triangle'};
+  el.innerHTML=`<i class="fas fa-${ic[type]||'info-circle'}"></i> ${msg}`;
+  w.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(110%)';el.style.transition='all .3s';setTimeout(()=>el.remove(),300);},3000);
+}
+
+// ══════════════════════════════════════════════
+// MODALS
+// ══════════════════════════════════════════════
+function oM(type){
+  rst(type);
+  if(type==='membre')popSel('fMemSol','sols');
+  if(type==='main')popSel('fMnMem','members');
+  if(type==='paiement')popSel('fPaMem','members');
+  if(type==='distribution')popSel('fDsMem','members');
+  if(type==='pret')popSel('fPrMem','members');
+  if(type==='remboursement')popSel('fRbMem','members');
+  if(type==='abandon')popSel('fAbMem','members');
+  g('mo'+cap(type)).classList.add('show');
+}
+function cM(type){const el=g('mo'+cap(type));if(el)el.classList.remove('show');}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+function rst(type){
+  const m=g('mo'+cap(type));if(!m)return;
+  m.querySelectorAll('input,textarea').forEach(el=>{el.value='';});
+  m.querySelectorAll('select').forEach(el=>{el.selectedIndex=0;});
+  m.querySelectorAll('input[type="date"]').forEach(el=>{el.value=new Date().toISOString().slice(0,10);});
+  const titles={sol:'Nouveau Sòl',membre:'Nouveau membre',main:'Ajouter une main',
+    paiement:'Enregistrer un paiement',distribution:'Enregistrer une distribution',
+    pret:'Nouveau prêt',remboursement:'Enregistrer un remboursement',
+    abandon:'Enregistrer un abandon',utilisateur:'Nouvel utilisateur'};
+  const te=g('t'+cap(type));if(te&&titles[type])te.textContent=titles[type];
+}
+function popSel(selId,coll){
+  const db=getDB();const sel=g(selId);if(!sel)return;
+  if(coll==='sols'){
+    sel.innerHTML='<option value="">— Choisir un Sòl —</option>'+db.sols.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  }else{
+    const mems=db.members.filter(m=>m.statut==='actif');
+    sel.innerHTML='<option value="">— Choisir un membre —</option>'+mems.map(m=>`<option value="${m.id}">${m.nom} ${m.prenom}</option>`).join('');
+  }
+}
+function cfmDel(msg,cb){
+  g('cfmMsg').textContent=msg;g('cfmOk').onclick=()=>{cb();cM('cfm');};g('moCfm').classList.add('show');
+}
+function showDet(title,html){g('detTtl').textContent=title;g('detBdy').innerHTML=html;g('moDet').classList.add('show');}
+
+// ══════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════
+function rDash(){
+  const db=getDB();
+  const aM=db.members.filter(m=>m.statut==='actif').length;
+  const tP=db.payments.reduce((s,p)=>s+parseFloat(p.amount||0),0);
+  const tD=db.distributions.reduce((s,d)=>s+parseFloat(d.netAmount||0),0);
+  const tL=db.loans.reduce((s,l)=>s+parseFloat(l.amount||0),0);
+  const tR=db.repayments.reduce((s,r)=>s+parseFloat(r.amount||0),0);
+  const nR=db.hands.filter(h=>{const t=new Date().toISOString().slice(0,10);return h.scheduledDate&&h.scheduledDate<t&&h.status!=='distributed';}).length;
+  const nA=db.members.filter(m=>m.statut==='abandonné').length;
+  const unr=db.alerts.filter(a=>!a.read).length;
+  g('dStats').innerHTML=`
+    <div class="stat-card g"><div class="st-lbl">Membres actifs</div><div class="st-val">${aM}</div><div class="st-sub">${db.members.length} total</div></div>
+    <div class="stat-card b"><div class="st-lbl">Total cotisé</div><div class="st-val" style="font-size:1.1rem">${fmt(tP)}</div><div class="st-sub">&nbsp;</div></div>
+    <div class="stat-card b"><div class="st-lbl">Distribué</div><div class="st-val" style="font-size:1.1rem">${fmt(tD)}</div><div class="st-sub">${db.distributions.length} opération(s)</div></div>
+    <div class="stat-card r"><div class="st-lbl">Retards</div><div class="st-val">${nR}</div><div class="st-sub">mains en retard</div></div>
+    <div class="stat-card o"><div class="st-lbl">Prêts actifs</div><div class="st-val">${db.loans.filter(l=>l.status==='actif').length}</div><div class="st-sub">Restant: ${fmt(Math.max(0,tL-tR))}</div></div>
+    <div class="stat-card p"><div class="st-lbl">Abandons</div><div class="st-val">${nA}</div><div class="st-sub">membres</div></div>
+    <div class="stat-card b"><div class="st-lbl">Sòl actifs</div><div class="st-val">${db.sols.filter(s=>s.status==='actif').length}</div><div class="st-sub">${db.sols.length} total</div></div>
+    <div class="stat-card o"><div class="st-lbl">Alertes non lues</div><div class="st-val">${unr}</div><div class="st-sub">&nbsp;</div></div>
+  `;
+  // Progress
+  const pe=g('dProg');
+  if(!db.sols.length){pe.innerHTML='<p style="color:var(--muted2);font-size:.8rem;text-align:center;padding:1rem">Aucun Sòl créé</p>';}
+  else pe.innerHTML=db.sols.slice(0,4).map(s=>{
+    const tot=db.hands.filter(h=>h.solId===s.id).reduce((t,h)=>t+(h.positions?h.positions.length:1),0);
+    const dn=db.distributions.filter(d=>d.solId===s.id).length;
+    const pct=tot>0?Math.round((dn/tot)*100):0;
+    return`<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:4px">
+        <span><span class="sol-dot sol-dot--${s.status}" style="display:inline-block"></span> <strong>${s.name}</strong></span>
+        <span style="color:var(--blue);font-weight:700">${pct}%</span>
+      </div>
+      <div class="prg"><div class="prg-f" style="width:${pct}%"></div></div>
+      <div style="font-size:.67rem;color:var(--muted2);margin-top:3px">${dn}/${tot} distributions</div>
+    </div>`;
+  }).join('');
+  // Alerts
+  const al=db.alerts.filter(a=>!a.read).slice(0,5);
+  g('dAlerts').innerHTML=al.length?al.map(a=>`<div class="ai ti unread">
+    <i class="fas fa-bell ai-ic" style="color:${a.type==='retard'?'var(--red)':a.type==='success'?'var(--green)':'var(--orange)'}"></i>
+    <div><div class="ai-msg">${a.title}</div><div class="ai-dt">${fd(a.date)}</div></div>
+  </div>`).join(''):'<p style="color:var(--muted2);font-size:.8rem;text-align:center;padding:1rem">Aucune alerte</p>';
+  // Retards
+  detectRet();
+  const rt=db.hands.filter(h=>{const t=new Date().toISOString().slice(0,10);return h.scheduledDate&&h.scheduledDate<t&&h.status!=='distributed';}).slice(0,5);
+  g('dRetards').innerHTML=rt.length?`<div class="tw"><table><thead><tr><th>Membre</th><th>Date prévue</th><th>Montant</th></tr></thead><tbody>${rt.map(h=>`<tr><td><strong>${mn(h.memberId,db)}</strong></td><td>${fd(h.scheduledDate)}</td><td style="color:var(--red);font-weight:700">${fmt(h.grossAmount,cy(h.solId,db))}</td></tr>`).join('')}</tbody></table></div>`:'<p style="color:var(--muted2);font-size:.8rem;text-align:center;padding:1rem">Aucun retard ✓</p>';
+}
+
+// ══════════════════════════════════════════════
+// SOLS CRUD
+// ══════════════════════════════════════════════
+function rSols(){
+  const db=getDB();const tb=g('tSols');
+  if(!db.sols.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><i class="fas fa-circle-nodes"></i><p>Aucun Sòl créé. Commencez par créer un Sòl.</p></div></td></tr>`;return;}
+  tb.innerHTML=db.sols.map(s=>`<tr>
+    <td><div style="display:flex;align-items:center;gap:6px"><span class="sol-dot sol-dot--${s.status}"></span><strong>${s.name}</strong>${s.id===db.activeSolId?' <span class="bdg bdg-g" style="font-size:.55rem">ACTIF</span>':''}</div></td>
+    <td>${fd(s.startDate)}</td><td>${fd(s.endDate)}</td>
+    <td><span class="bdg bdg-b">${s.frequency}</span></td>
+    <td><strong>${fmt(s.amount,s.currency)}</strong></td>
+    <td>${fmt(s.headFee||s.tk||0,s.currency)}</td>
+    <td>${bdg(s.status)}</td>
+    <td><div class="ag">
+      <button class="bi see" onclick="vwSol('${s.id}')" title="Voir"><i class="fas fa-eye"></i></button>
+      <button class="bi edit" onclick="edSol('${s.id}')" title="Modifier"><i class="fas fa-pen"></i></button>
+      <button class="bi del" onclick="dlSol('${s.id}')" title="Supprimer"><i class="fas fa-trash"></i></button>
+    </div></td>
+  </tr>`).join('');
+}
+function saveSol(){
+  const id=v('fSolId');const name=v('fSolNm').trim();const start=v('fSolS');const amount=parseFloat(v('fSolAm'));
+  if(!name||!start||!amount){toast('Champs obligatoires manquants (*)','error');return;}
+  const db=getDB();
+  const data={name,startDate:start,endDate:v('fSolE'),frequency:v('fSolFq'),amount,
+    headFee:parseFloat(v('fSolTK'))||0,maxHands:parseInt(v('fSolMx'))||0,
+    currency:v('fSolCy')||'USD',status:v('fSolSt'),description:v('fSolDs')};
+  if(id){const i=db.sols.findIndex(s=>s.id===id);if(i>=0)db.sols[i]={...db.sols[i],...data,updatedAt:ts()};lg('Modification','Sòl',`${name} modifié`);toast('Sòl modifié');}
+  else{const sol={id:gId(),...data,createdAt:ts()};db.sols.push(sol);if(!db.activeSolId)db.activeSolId=sol.id;lg('Création','Sòl',`Nouveau Sòl "${name}"`);adAlert('info',`Nouveau Sòl "${name}" créé`,sol.id);toast('Sòl créé');}
+  svDB(db);updSBSol();cM('sol');rSols();
+}
+function edSol(id){
+  const db=getDB();const s=db.sols.find(x=>x.id===id);if(!s)return;
+  sv('fSolId',s.id);sv('fSolNm',s.name);sv('fSolS',s.startDate||'');sv('fSolE',s.endDate||'');
+  sv('fSolFq',s.frequency||'mensuelle');sv('fSolAm',s.amount);sv('fSolTK',s.headFee||s.tk||0);
+  sv('fSolMx',s.maxHands||'');sv('fSolCy',s.currency||'USD');sv('fSolSt',s.status);sv('fSolDs',s.description||'');
+  g('tSol').textContent='Modifier Sòl';g('moSol').classList.add('show');
+}
+function dlSol(id){
+  const db=getDB();const s=db.sols.find(x=>x.id===id);
+  cfmDel(`Supprimer le Sòl "${s?.name}" et toutes ses données ?`,()=>{
+    const db2=getDB();['members','hands','payments','distributions','loans','repayments','abandonments','alerts','activities'].forEach(k=>{if(Array.isArray(db2[k]))db2[k]=db2[k].filter(x=>x.solId!==id);});
+    db2.sols=db2.sols.filter(x=>x.id!==id);if(db2.activeSolId===id)db2.activeSolId=db2.sols[0]?.id||null;
+    svDB(db2);lg('Suppression','Sòl',`${s?.name} supprimé`);toast('Sòl supprimé','warning');updSBSol();rSols();
+  });
+}
+function vwSol(id){
+  const db=getDB();const s=db.sols.find(x=>x.id===id);if(!s)return;
+  const mems=db.members.filter(m=>m.solId===id).length;const dists=db.distributions.filter(d=>d.solId===id).length;
+  const paid=db.payments.filter(p=>p.solId===id).reduce((t,p)=>t+parseFloat(p.amount||0),0);
+  showDet(s.name,`<div class="drow"><span class="dlbl">Périodicité</span><span class="dval">${s.frequency}</span></div>
+    <div class="drow"><span class="dlbl">Date début</span><span class="dval">${fd(s.startDate)}</span></div>
+    <div class="drow"><span class="dlbl">Date fin</span><span class="dval">${fd(s.endDate)}</span></div>
+    <div class="drow"><span class="dlbl">Montant / main</span><span class="dval">${fmt(s.amount,s.currency)}</span></div>
+    <div class="drow"><span class="dlbl">Tèt Kaye / main</span><span class="dval">${fmt(s.headFee||0,s.currency)}</span></div>
+    <div class="drow"><span class="dlbl">Membres</span><span class="dval">${mems}</span></div>
+    <div class="drow"><span class="dlbl">Distributions</span><span class="dval">${dists}</span></div>
+    <div class="drow"><span class="dlbl">Total cotisé</span><span class="dval">${fmt(paid,s.currency)}</span></div>
+    <div class="drow"><span class="dlbl">Statut</span><span class="dval">${bdg(s.status)}</span></div>`);
+}
+
+// ══════════════════════════════════════════════
+// MEMBRES CRUD
+// ══════════════════════════════════════════════
+function rMembres(){
+  const db=getDB();const q=(v('memQ')||'').toLowerCase();
+  let mems=db.members;if(q)mems=mems.filter(m=>`${m.nom} ${m.prenom} ${m.telephone||''} ${m.profession||''}`.toLowerCase().includes(q));
+  const tb=g('tMembres');
+  if(!mems.length){tb.innerHTML=`<tr><td colspan="6"><div class="empty"><i class="fas fa-users"></i><p>Aucun membre trouvé</p></div></td></tr>`;return;}
+  tb.innerHTML=mems.map(m=>{
+    const sol=db.sols.find(s=>s.id===m.solId);
+    const nb=db.hands.filter(h=>h.memberId===m.id).reduce((s,h)=>s+(h.positions?h.positions.length:1),0);
+    return`<tr>
+      <td><div style="display:flex;align-items:center;gap:7px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">${(m.nom||'?').charAt(0)}${(m.prenom||'').charAt(0)}</div>
+        <div><div style="font-weight:600;font-size:.79rem">${m.nom} ${m.prenom}</div><div style="font-size:.67rem;color:var(--muted)">${m.profession||''}</div></div>
+      </div></td>
+      <td>${m.telephone||'—'}</td><td>${sol?sol.name:'—'}</td>
+      <td><strong>${nb}</strong> main(s)</td><td>${bdg(m.statut||'actif')}</td>
+      <td><div class="ag">
+        <button class="bi see" onclick="vwMem('${m.id}')" title="Voir"><i class="fas fa-eye"></i></button>
+        <button class="bi edit" onclick="edMem('${m.id}')" title="Modifier"><i class="fas fa-pen"></i></button>
+        <button class="bi del" onclick="dlMem('${m.id}')" title="Supprimer"><i class="fas fa-trash"></i></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function saveMem(){
+  const id=v('fMemId');const nom=v('fMemNm').trim();const prenom=v('fMemPn').trim();const solId=v('fMemSol');
+  if(!nom||!prenom||!solId){toast('Nom, prénom et Sòl obligatoires','error');return;}
+  const db=getDB();
+  const data={nom,prenom,sexe:v('fMemSx'),telephone:v('fMemTl'),solId,profession:v('fMemPf'),
+    dateInscription:v('fMemDt'),adresse:v('fMemAd'),statut:v('fMemSt')||'actif',
+    abandonDate:v('fMemAD'),abandonMotif:v('fMemAM'),observations:v('fMemOb')};
+  if(id){const i=db.members.findIndex(m=>m.id===id);if(i>=0)db.members[i]={...db.members[i],...data,updatedAt:ts()};lg('Modification','Membres',`${nom} ${prenom} modifié`);toast('Membre modifié');}
+  else{db.members.push({id:gId(),...data,createdAt:ts()});lg('Création','Membres',`Nouveau membre ${nom} ${prenom}`);toast('Membre ajouté');}
+  svDB(db);cM('membre');rMembres();
+}
+function edMem(id){
+  const db=getDB();const m=db.members.find(x=>x.id===id);if(!m)return;
+  popSel('fMemSol','sols');
+  sv('fMemId',m.id);sv('fMemNm',m.nom);sv('fMemPn',m.prenom||'');sv('fMemSx',m.sexe||'M');
+  sv('fMemTl',m.telephone||'');sv('fMemSol',m.solId);sv('fMemPf',m.profession||'');
+  sv('fMemDt',m.dateInscription||'');sv('fMemAd',m.adresse||'');sv('fMemSt',m.statut||'actif');
+  sv('fMemAD',m.abandonDate||'');sv('fMemAM',m.abandonMotif||'');sv('fMemOb',m.observations||'');
+  g('tMembre').textContent='Modifier membre';
+  g('abF').style.display=(m.statut==='abandonné')?'block':'none';
+  g('moMembre').classList.add('show');
+}
+function dlMem(id){
+  const db=getDB();const m=db.members.find(x=>x.id===id);
+  cfmDel(`Supprimer "${m?.nom} ${m?.prenom}" ?`,()=>{
+    const db2=getDB();db2.members=db2.members.filter(x=>x.id!==id);
+    ['hands','payments','distributions','loans','repayments','abandonments'].forEach(k=>{if(Array.isArray(db2[k]))db2[k]=db2[k].filter(x=>x.memberId!==id);});
+    svDB(db2);lg('Suppression','Membres',`${m?.nom} supprimé`);toast('Supprimé','warning');rMembres();
+  });
+}
+function togAbF(){g('abF').style.display=(v('fMemSt')==='abandonné')?'block':'none';}
+function vwMem(id){
+  const db=getDB();const m=db.members.find(x=>x.id===id);if(!m)return;
+  const sol=db.sols.find(s=>s.id===m.solId);
+  const paid=db.payments.filter(p=>p.memberId===id).reduce((t,p)=>t+parseFloat(p.amount||0),0);
+  const dists=db.distributions.filter(d=>d.memberId===id);
+  const loans=db.loans.filter(l=>l.memberId===id);
+  const remb=db.repayments.filter(r=>r.memberId===id).reduce((t,r)=>t+parseFloat(r.amount||0),0);
+  showDet(`${m.nom} ${m.prenom}`,`
+    <div class="drow"><span class="dlbl">Nom complet</span><span class="dval">${m.nom} ${m.prenom}</span></div>
+    <div class="drow"><span class="dlbl">Téléphone</span><span class="dval">${m.telephone||'—'}</span></div>
+    <div class="drow"><span class="dlbl">Profession</span><span class="dval">${m.profession||'—'}</span></div>
+    <div class="drow"><span class="dlbl">Sòl</span><span class="dval">${sol?.name||'—'}</span></div>
+    <div class="drow"><span class="dlbl">Date inscription</span><span class="dval">${fd(m.dateInscription)}</span></div>
+    <div class="drow"><span class="dlbl">Total cotisé</span><span class="dval" style="color:var(--green)">${fmt(paid,sol?.currency)}</span></div>
+    <div class="drow"><span class="dlbl">Distributions reçues</span><span class="dval">${dists.length}</span></div>
+    <div class="drow"><span class="dlbl">Prêts reçus</span><span class="dval">${loans.length}</span></div>
+    <div class="drow"><span class="dlbl">Prêts remboursés</span><span class="dval">${fmt(remb,sol?.currency)}</span></div>
+    <div class="drow"><span class="dlbl">Statut</span><span class="dval">${bdg(m.statut||'actif')}</span></div>
+    ${m.statut==='abandonné'?`<div class="drow"><span class="dlbl">Date abandon</span><span class="dval">${fd(m.abandonDate)}</span></div>`:''}
+  `);
+}
+
+// ══════════════════════════════════════════════
+// MAINS (HANDS) CRUD
+// ══════════════════════════════════════════════
+function calcMn(){
+  const memId=v('fMnMem');const posStr=v('fMnPos');
+  const db=getDB();const mem=db.members.find(m=>m.id===memId);const sol=mem?db.sols.find(s=>s.id===mem.solId):null;
+  const pos=posStr?posStr.split(',').map(p=>p.trim()).filter(Boolean):[];const nb=pos.length||1;
+  sv('fMnNb',nb);
+  const brut=(sol?.amount||0)*nb;const tk=((sol?.headFee||sol?.tk||0))*nb;const net=brut-tk;
+  g('cBrut').textContent=fmt(brut,sol?.currency);g('cTK').textContent=fmt(tk,sol?.currency);g('cNet').textContent=fmt(net,sol?.currency);
+}
+function rMains(){
+  const db=getDB();const tb=g('tMains');
+  if(!db.hands.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty"><i class="fas fa-hand-holding-dollar"></i><p>Aucune main enregistrée</p></div></td></tr>`;return;}
+  tb.innerHTML=db.hands.map(h=>{
+    const mem=db.members.find(m=>m.id===h.memberId);const sol=db.sols.find(s=>s.id===h.solId);
+    return`<tr>
+      <td><strong>${mem?`${mem.nom} ${mem.prenom}`:'—'}</strong></td>
+      <td>${sol?sol.name:'—'}</td>
+      <td>${h.positions?h.positions.join(', '):'—'}</td>
+      <td>${h.positions?h.positions.length:1}</td>
+      <td>${fmt(h.grossAmount,sol?.currency)}</td>
+      <td>${fmt(h.headFee||0,sol?.currency)}</td>
+      <td style="color:var(--green);font-weight:700">${fmt(h.netAmount,sol?.currency)}</td>
+      <td>${fd(h.scheduledDate)}</td><td>${bdg(h.status||'pending')}</td>
+      <td><div class="ag">
+        <button class="bi edit" onclick="edMn('${h.id}')" title="Modifier"><i class="fas fa-pen"></i></button>
+        <button class="bi del" onclick="dlMn('${h.id}')" title="Supprimer"><i class="fas fa-trash"></i></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function saveMn(){
+  const id=v('fMnId');const memId=v('fMnMem');const posStr=v('fMnPos').trim();
+  if(!memId||!posStr){toast('Membre et position(s) obligatoires','error');return;}
+  const db=getDB();const mem=db.members.find(m=>m.id===memId);const sol=mem?db.sols.find(s=>s.id===mem.solId):null;
+  const pos=posStr.split(',').map(p=>parseInt(p.trim())).filter(n=>!isNaN(n));const nb=pos.length;
+  const brut=(sol?.amount||0)*nb;const tk=((sol?.headFee||sol?.tk||0))*nb;const net=brut-tk;
+  const data={memberId:memId,solId:mem?.solId,positions:pos,grossAmount:brut,headFee:tk,netAmount:net,scheduledDate:v('fMnDt'),status:v('fMnSt')||'pending'};
+  if(id){const i=db.hands.findIndex(h=>h.id===id);if(i>=0)db.hands[i]={...db.hands[i],...data,updatedAt:ts()};lg('Modification','Mains',`Pos.${pos.join(',')} modifiée`);toast('Main modifiée');}
+  else{db.hands.push({id:gId(),...data,createdAt:ts()});lg('Création','Mains',`Main(s) pos.${pos.join(',')} ajoutée(s)`);toast('Main ajoutée');}
+  svDB(db);cM('main');rMains();
+}
+function edMn(id){
+  const db=getDB();const h=db.hands.find(x=>x.id===id);if(!h)return;
+  popSel('fMnMem','members');
+  sv('fMnId',h.id);sv('fMnMem',h.memberId);sv('fMnPos',h.positions?h.positions.join(', '):'');
+  sv('fMnNb',h.positions?h.positions.length:1);sv('fMnDt',h.scheduledDate||'');sv('fMnSt',h.status||'pending');
+  const sol=db.sols.find(s=>s.id===h.solId);
+  g('cBrut').textContent=fmt(h.grossAmount,sol?.currency);g('cTK').textContent=fmt(h.headFee||0,sol?.currency);g('cNet').textContent=fmt(h.netAmount,sol?.currency);
+  g('tMain').textContent='Modifier main';g('moMain').classList.add('show');
+}
+function dlMn(id){
+  cfmDel('Supprimer cette main ?',()=>{const db=getDB();db.hands=db.hands.filter(h=>h.id!==id);svDB(db);lg('Suppression','Mains','Main supprimée');toast('Supprimée','warning');rMains();});
+}
+
+// ══════════════════════════════════════════════
+// PAIEMENTS CRUD
+// ══════════════════════════════════════════════
+function calcPa(){
+  const memId=v('fPaMem');const paye=parseFloat(v('fPaPy'))||0;
+  const db=getDB();const mem=db.members.find(m=>m.id===memId);const sol=mem?db.sols.find(s=>s.id===mem.solId):null;
+  const nb=db.hands.filter(h=>h.memberId===memId).reduce((s,h)=>s+(h.positions?h.positions.length:1),0);
+  const att=sol?(sol.amount*(nb||1)):0;sv('fPaAt',att);
+  const diff=paye-att;const de=g('cDiff');const se=g('cStat');
+  de.textContent=(diff>=0?'+':'')+fmt(diff,sol?.currency);de.style.color=diff>0?'var(--green)':diff<0?'var(--red)':'var(--ink)';
+  if(Math.abs(diff)<0.01){se.textContent='✓ Paiement exact';se.style.color='var(--green)';}
+  else if(diff>0){se.textContent=`Excédent ${fmt(diff,sol?.currency)} → reporté`;se.style.color='var(--blue)';}
+  else{se.textContent=`Incomplet — Reste: ${fmt(Math.abs(diff),sol?.currency)}`;se.style.color='var(--red)';}
+}
+function rPaie(){
+  const db=getDB();const tb=g('tPaie');
+  if(!db.payments.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty"><i class="fas fa-money-bill-wave"></i><p>Aucun paiement enregistré</p></div></td></tr>`;return;}
+  tb.innerHTML=db.payments.map(p=>{
+    const mem=db.members.find(m=>m.id===p.memberId);const sol=db.sols.find(s=>s.id===p.solId);
+    const diff=parseFloat(p.amount||0)-parseFloat(p.expectedAmount||0);
+    const st=Math.abs(diff)<0.01?'exact':diff>0?'excédent':'incomplet';
+    return`<tr>
+      <td>${fd(p.date)}</td><td><strong>${mem?`${mem.nom} ${mem.prenom}`:'—'}</strong></td>
+      <td>${fmt(p.expectedAmount||0,sol?.currency)}</td>
+      <td style="color:var(--green);font-weight:600">${fmt(p.amount,sol?.currency)}</td>
+      <td style="color:${diff>=0?'var(--green)':'var(--red)'}">${diff>=0?'+':''}${fmt(diff,sol?.currency)}</td>
+      <td>${p.carriedForward>0?`<span class="bdg bdg-b">+${fmt(p.carriedForward,sol?.currency)}</span>`:'—'}</td>
+      <td>${p.remaining>0?`<span class="bdg bdg-r">${fmt(p.remaining,sol?.currency)}</span>`:'—'}</td>
+      <td>${p.mode||'—'}</td><td>${bdg(st)}</td>
+      <td><div class="ag">
+        <button class="bi edit" onclick="edPa('${p.id}')" title="Modifier"><i class="fas fa-pen"></i></button>
+        <button class="bi del" onclick="dlPa('${p.id}')" title="Supprimer"><i class="fas fa-trash"></i></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function savePa(){
+  const id=v('fPaId');const memId=v('fPaMem');const paye=parseFloat(v('fPaPy'));
+  if(!memId||isNaN(paye)){toast('Membre et montant obligatoires','error');return;}
+  const db=getDB();const mem=db.members.find(m=>m.id===memId);const sol=mem?db.sols.find(s=>s.id===mem.solId):null;
+  const att=parseFloat(v('fPaAt'))||0;const diff=paye-att;
+  const data={memberId:memId,solId:mem?.solId,date:v('fPaDt'),expectedAmount:att,amount:paye,
+    carriedForward:diff>0?diff:0,remaining:diff<0?Math.abs(diff):0,mode:v('fPaMd'),observations:v('fPaOb')};
+  if(id){const i=db.payments.findIndex(p=>p.id===id);if(i>=0)db.payments[i]={...db.payments[i],...data,updatedAt:ts()};lg('Modification','Paiements','Paiement modifié');toast('Paiement modifié');}
+  else{db.payments.push({id:gId(),...data,createdAt:ts()});
+    if(diff>0)adAlert('info',`Excédent ${fmt(diff,sol?.currency)} reporté — ${mem?.nom}`,mem?.solId);
+    if(diff<0)adAlert('warning',`Paiement incomplet — Reste ${fmt(Math.abs(diff),sol?.currency)} — ${mem?.nom}`,mem?.solId);
+    lg('Création','Paiements',`${fmt(paye,sol?.currency)} payé par ${mem?.nom}`);toast('Paiement enregistré');}
+  svDB(db);cM('paiement');rPaie();
+}
+function edPa(id){
+  const db=getDB();const p=db.payments.find(x=>x.id===id);if(!p)return;
+  popSel('fPaMem','members');sv('fPaId',p.id);sv('fPaDt',p.date||'');sv('fPaMem',p.memberId);
+  sv('fPaAt',p.expectedAmount||0);sv('fPaPy',p.amount||0);sv('fPaMd',p.mode||'espèces');sv('fPaOb',p.observations||'');
+  g('tPai').textContent='Modifier paiement';g('moPaiement').classList.add('show');calcPa();
+}
+function dlPa(id){
+  cfmDel('Supprimer ce paiement ?',()=>{const db=getDB();db.payments=db.payments.filter(p=>p.id!==id);svDB(db);lg('Suppression','Paiements','Paiement supprimé');toast('Supprimé','warning');rPaie();});
+}
+
+// ══════════════════════════════════════════════
+// DISTRIBUTIONS CRUD
+// ══════════════════════════════════════════════
+function loadHands(){
+  const memId=v('fDsMem');const db=getDB();const sel=g('fDsHnd');if(!sel)return;
+  const hs=db.hands.filter(h=>h.memberId===memId&&h.status!=='distributed');
+  sel.innerHTML=hs.length?hs.map(h=>`<option value="${h.id}">Pos. ${h.positions?h.positions.join(','):'?'} — ${fmt(h.netAmount)}</option>`).join(''):'<option disabled>Aucune main disponible</option>';
+  calcDs();
+}
+function calcDs(){
+  const memId=v('fDsMem');const sel=g('fDsHnd');const db=getDB();
+  const mem=db.members.find(m=>m.id===memId);const sol=mem?db.sols.find(s=>s.id===mem.solId):null;
+  const sel2=sel?Array.from(sel.selectedOptions).map(o=>o.value):[];
+  const allPos=sel2.flatMap(hid=>{const h=db.hands.find(x=>x.id===hid);return h?.positions||[];});
+  const nb=allPos.length||0;const brut=(sol?.amount||0)*nb;const tk=((sol?.headFee||sol?.tk||0))*nb;const net=brut-tk;
+  g('dNb').textContent=nb;g('dBr').textContent=fmt(brut,sol?.currency);g('dTK').textContent=fmt(tk,sol?.currency);g('dNt').textContent=fmt(net,sol?.currency);
+}
+function rDist(){
+  const db=getDB();const tb=g('tDist');
+  if(!db.distributions.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><i class="fas fa-share-from-square"></i><p>Aucune distribution enregistrée</p></div></td></tr>`;return;}
+  tb.innerHTML=db.distributions.map(d=>{
+    const mem=db.members.find(m=>m.id===d.memberId);const sol=db.sols.find(s=>s.id===d.solId);
+    return`<tr>
+      <td>${fd(d.date)}</td><td><strong>${mem?`${mem.nom} ${mem.prenom}`:'—'}</strong></td>
+      <td>${d.positions?d.positions.join(', '):'—'}</td><td>${d.handsCount||1}</td>
+      <td>${fmt(d.grossAmount,sol?.currency)}</td><td>${fmt(d.headFee||0,sol?.currency)}</td>
+      <td style="color:var(--green);font-weight:700">${fmt(d.netAmount,sol?.currency)}</td>
+      <td>${d.mode||'—'}</td>
+      <td><div class="ag">
+        <button class="bi see" onclick="vwDs('${d.id}')" title="Voir"><i class="fas fa-eye"></i></button>
+        <button class="bi edit" onclick="edDs('${d.id}')" title="Modifier"><i class="fas fa-pen"></i></button>
+        <button class="bi del" onclick="dlDs('${d.id}')" title="Supprimer"><i class="fas fa-trash"></i></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function saveDs(){
+  const id=v('fDsId');const memId=v('fDsMem');const sel=g('fDsHnd');
+  const hIds=sel?Array.from(sel.selectedOptions).map(o=>o.value):[];
+  if(!memId||!hIds.length){toast('Membre et main(s) obligatoires','error');return;}
+  const db=getDB();const mem=db.members.find(m=>m.id===memId);const sol=mem?db.sols.find(s=>s.id===mem.solId):null;
+  const positions=hIds.flatMap(hid=>{const h=db.hands.find(x=>x.id===hid);return h?.positions||[];});
+  const nb=positions.length;const brut=(sol?.amount||0)*nb;const tk=((sol?.headFee||sol?.tk||0))*nb;const net=brut-tk;
+  const data={memberId:memId,solId:mem?.solId,positions,handsCount:nb,date:v('fDsDt'),
+    grossAmount:brut,headFee:tk,netAmount:net,mode:v('fDsMd'),observations:v('fDsOb'),
+    responsable:CU?.nom,handIds:hIds};
+  if(id){const i=db.distributions.findIndex(d=>d.id===id);if(i>=0)db.distributions[i]={...db.distributions[i],...data,updatedAt:ts()};lg('Modification','Distributions','Distribution modifiée');toast('Modifiée');}
+  else{db.distributions.push({id:gId(),...data,createdAt:ts()});
+    hIds.forEach(hid=>{const hi=db.hands.findIndex(h=>h.id===hid);if(hi>=0)db.hands[hi].status='distributed';});
+    adAlert('success',`Main distribuée à ${mem?.nom} — ${fmt(net,sol?.currency)}`,mem?.solId);
+    lg('Création','Distributions',`${fmt(net,sol?.currency)} distribué à ${mem?.nom}`);toast('Distribution validée');}
+  svDB(db);cM('distribution');rDist();
+}
+function edDs(id){
+  const db=getDB();const d=db.distributions.find(x=>x.id===id);if(!d)return;
+  popSel('fDsMem','members');sv('fDsId',d.id);sv('fDsDt',d.date||'');sv('fDsMem',d.memberId);sv('fDsMd',d.mode||'espèces');sv('fDsOb',d.observations||'');
+  const sol=db.sols.find(s=>s.id===d.solId);
+  g('dNb').textContent=d.handsCount||1;g('dBr').textContent=fmt(d.grossAmount,sol?.currency);g('dTK').textContent=fmt(d.headFee||0,sol?.currency);g('dNt').textContent=fmt(d.netAmount,sol?.currency);
+  g('tDist').textContent='Modifier distribution';g('moDistribution').classList.add('show');
+}
+function dlDs(id){
+  cfmDel('Supprimer cette distribution ?',()=>{
+    const db=getDB();const d=db.distributions.find(x=>x.id===id);
+    if(d?.handIds)d.handIds.forEach(hid=>{const hi=db.hands.findIndex(h=>h.id===hid);if(hi>=0)db.hands[hi].status='pending';});
+    db.distributions=db.distributions.filter(x=>x.id!==id);svDB(db);lg('Suppression','Distributions','Distribution supprimée');toast('Supprimée','warning');rDist();
+  });
+}
+function vwDs(id){
+  const db=getDB();const d=db.distributions.find(x=>x.id===id);if(!d)return;
+  const mem=db.members.find(m=>m.id===d.memberId);const sol=db.sols.find(s=>s.id===d.solId);
+  showDet(`Distribution — ${mem?.nom} ${mem?.prenom}`,`
+    <div class="drow"><span class="dlbl">Membre</span><span class="dval">${mem?.nom} ${mem?.prenom}</span></div>
+    <div class="drow"><span class="dlbl">Sòl</span><span class="dval">${sol?.name||'—'}</span></div>
+    <div class="drow"><span class="dlbl">Positions</span><span class="dval">${d.positions?.join(', ')||'—'}</span></div>
+    <div class="drow"><span class="dlbl">Nb mains</span><span class="dval">${d.handsCount||1}</span></div>
+    <div class="drow"><span class="dlbl">Date</span><span class="dval">${fd(d.date)}</span></div>
+    <div class="drow"><span class="dlbl">Montant brut</span><span class="dval">${fmt(d.grossAmount,sol?.currency)}</span></div>
+    <div class="drow"><span class="dlbl">Tèt Kaye déduite</span><span class="dval" style="color:var(--red)">−${fmt(d.headFee||0,sol?.currency)}</span></div>
+    <div class="drow"><span class="dlbl">Montant net reçu</span><span class="dval" style="color:var(--green);font-weight:800">${fmt(d.netAmount,sol?.currency)}</span></div>
+    <div class="drow"><span class="dlbl">Mode</span><span class="dval">${d.mode||'—'}</span></div>
+    <div class="drow"><span class="dlbl">Responsable</span><span class="dval">${d.responsable||'—'}</span></div>
+    <div class="drow"><span class="dlbl">Observations</span><span class="dval">${d.observations||'—'}</span></div>`);
+}
+
+// ══════════════════════════════════════════════
+// PRÊTS CRUD
+// ══════════════════════════════════════════════
+let prF='tous';
+function fPrets(f,btn){prF=f;document.querySelectorAll('#prets .tab').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');rPrets();}
+function rPrets(){
+  const db=getDB();const tb=g('tPrets');
+  let loans=db.loans;
+  if(prF==='actif')loans=loans.filter(l=>l.status==='actif');
+  else if(prF==='remboursé')loans=loans.filter(l=>l.status==='remboursé');
+  else if(prF==='retard')loans=loans.filter(l=>l.status==='retard');
+  if(!loans.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><i class="fas fa-hand-holding-usd"></i><p>Aucun prêt trouvé</p></div></td></tr>`;return;}
+  tb.innerHTML=loans.map(l=>{
+    const mem=db.members.find(m=>m.id===l.memberId);const sol=db.sols.find(s=>s.id===l.solId);
+    const remb=db.repayments.filter(r=>r.loanId===l.id).reduce((t,r)=>t+parseFloat(r.amount||0),0);
+    const rest=Math.max(0,parseFloat(l.amount||0)-remb);
+    return`<tr>
+      <td>${fd(l.date)}</td><td><strong>${mem?`${mem.nom} ${mem.prenom}`:'—'}</strong></td>
+      <td>${fmt(l.amount,sol?.currency)}</td><td>${l.reason||l.motif||'—'}</td>
+      <td style="color:var(--green)">${fmt(remb,sol?.currency)}</td>
+      <td style="color:${rest>0?'var(--red)':'var(--green)'};font-weight:700">${fmt(rest,sol?.currency)}</td>
+      <td>${fd(l.dueDate||l.echeance)}</td><td>${bdg(rest<=0?'remboursé':l.status||'actif')}</td>
+      <td><div class="ag">
+        <button class="bi edit" onclick="edPr('${l.id}')" title="Modifier"><i class="fas fa-pen"></i></button>
+        <button class="bi del" onclick="dlPr('${l.id}')" title="Supprimer"><i class="fas fa-trash"></i></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function savePr(){
+  const id=v('fPrId');const memId=v('fPrMem');const amount=parseFloat(v('fPrAm'));
+  if(!memId||isNaN(amount)){toast('Membre et montant obligatoires','error');return;}
+  const db=getDB();const mem=db.members.find(m=>m.id===memId);
+  const data={memberId:memId,solId:mem?.solId,date:v('fPrDt'),amount,reason:v('fPrMt'),dueDate:v('fPrEch'),status:v('fPrSt')||'actif',observations:v('fPrOb')};
+  if(id){const i=db.loans.findIndex(l=>l.id===id);if(i>=0)db.loans[i]={...db.loans[i],...data,updatedAt:ts()};lg('Modification','Prêts','Prêt modifié');toast('Prêt modifié');}
+  else{db.loans.push({id:gId(),...data,createdAt:ts()});adAlert('info',`Prêt accordé à ${mem?.nom}: ${fmt(amount)}`,mem?.solId);lg('Création','Prêts',`Prêt ${fmt(amount)} → ${mem?.nom}`);toast('Prêt accordé');}
+  svDB(db);cM('pret');rPrets();
+}
+function edPr(id){
+  const db=getDB();const l=db.loans.find(x=>x.id===id);if(!l)return;
+  popSel('fPrMem','members');sv('fPrId',l.id);sv('fPrDt',l.date||'');sv('fPrMem',l.memberId);
+  sv('fPrAm',l.amount);sv('fPrMt',l.reason||l.motif||'');sv('fPrEch',l.dueDate||l.echeance||'');sv('fPrSt',l.status||'actif');sv('fPrOb',l.observations||'');
+  g('tPret').textContent='Modifier prêt';g('moPret').classList.add('show');
+}
+function dlPr(id){
+  cfmDel('Supprimer ce prêt et ses remboursements ?',()=>{const db=getDB();db.loans=db.loans.filter(l=>l.id!==id);db.repayments=db.repayments.filter(r=>r.loanId!==id);svDB(db);lg('Suppression','Prêts','Prêt supprimé');toast('Supprimé','warning');rPrets();rRemb();});
+}
+
+// ══════════════════════════════════════════════
+// REMBOURSEMENTS CRUD
+// ══════════════════════════════════════════════
+function loadPrets4R(){
+  const memId=v('fRbMem');const db=getDB();const sel=g('fRbPr');if(!sel)return;
+  const loans=db.loans.filter(l=>l.memberId===memId&&l.status!=='remboursé');
+  sel.innerHTML=loans.length?loans.map(l=>`<option value="${l.id}">Prêt du ${fd(l.date)}: ${fmt(l.amount)}</option>`).join(''):'<option disabled>Aucun prêt actif</option>';
+}
+function rRemb(){
+  const db=getDB();const tb=g('tRemb');
+  if(!db.repayments.length){tb.innerHTML=`<tr><td colspan="6"><div class="empty"><i class="fas fa-undo-alt"></i><p>Aucun remboursement</p></div></td></tr>`;return;}
+  tb.innerHTML=db.repayments.map(r=>{
+    const mem=db.members.find(m=>m.id===r.memberId);const loan=db.loans.find(l=>l.id===r.loanId);const sol=loan?db.sols.find(s=>s.id===loan.solId):null;
+    return`<tr>
+      <td>${fd(r.date)}</td><td><strong>${mem?`${mem.nom} ${mem.prenom}`:'—'}</strong></td>
+      <td>${loan?`Prêt du ${fd(loan.date)}: ${fmt(loan.amount,sol?.currency)}`:'—'}</td>
+      <td style="color:var(--green);font-weight:700">${fmt(r.amount,sol?.currency)}</td>
+      <td>${r.observations||'—'}</td>
+      <td><div class="ag">
+        <button class="bi edit" onclick="edRb('${r.id}')" title="Modifier"><i class="fas fa-pen"></i></button>
+        <button class="bi del" onclick="dlRb('${r.id}')" title="Supprimer"><i class="fas fa-trash"></i></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function saveRb(){
+  const id=v('fRbId');const memId=v('fRbMem');const loanId=v('fRbPr');const amount=parseFloat(v('fRbAm'));
+  if(!memId||isNaN(amount)){toast('Membre et montant obligatoires','error');return;}
+  const db=getDB();const mem=db.members.find(m=>m.id===memId);const loan=db.loans.find(l=>l.id===loanId);
+  const data={memberId:memId,loanId,solId:loan?.solId||mem?.solId,date:v('fRbDt'),amount,observations:v('fRbOb')};
+  if(id){const i=db.repayments.findIndex(r=>r.id===id);if(i>=0)db.repayments[i]={...db.repayments[i],...data,updatedAt:ts()};lg('Modification','Remboursements','Remboursement modifié');toast('Modifié');}
+  else{db.repayments.push({id:gId(),...data,createdAt:ts()});
+    if(loan){const tot=db.repayments.filter(r=>r.loanId===loanId).reduce((t,r)=>t+parseFloat(r.amount||0),0)+amount;
+      if(tot>=parseFloat(loan.amount)){const li=db.loans.findIndex(l=>l.id===loanId);if(li>=0)db.loans[li].status='remboursé';adAlert('success',`Prêt de ${mem?.nom} entièrement remboursé !`,loan.solId);}}
+    lg('Création','Remboursements',`${fmt(amount)} remboursé par ${mem?.nom}`);toast('Remboursement enregistré');}
+  svDB(db);cM('remboursement');rRemb();rPrets();
+}
+function edRb(id){
+  const db=getDB();const r=db.repayments.find(x=>x.id===id);if(!r)return;
+  popSel('fRbMem','members');sv('fRbId',r.id);sv('fRbDt',r.date||'');sv('fRbMem',r.memberId);sv('fRbAm',r.amount);sv('fRbOb',r.observations||'');
+  setTimeout(()=>{loadPrets4R();sv('fRbPr',r.loanId);},50);
+  g('tRemb').textContent='Modifier remboursement';g('moRemboursement').classList.add('show');
+}
+function dlRb(id){
+  cfmDel('Supprimer ce remboursement ?',()=>{const db=getDB();db.repayments=db.repayments.filter(r=>r.id!==id);svDB(db);lg('Suppression','Remboursements','Remboursement supprimé');toast('Supprimé','warning');rRemb();rPrets();});
+}
+
+// ══════════════════════════════════════════════
+// RETARDS (auto-détection)
+// ══════════════════════════════════════════════
+function detectRet(){
+  const db=getDB();const today=new Date().toISOString().slice(0,10);
+  db.hands.forEach(h=>{
+    if(h.scheduledDate&&h.scheduledDate<today&&h.status==='pending'){
+      const mem=db.members.find(m=>m.id===h.memberId);
+      if(mem&&mem.statut==='actif'&&!db.alerts.find(a=>a.handId===h.id&&a.type==='retard'&&!a.read)){
+        db.alerts.unshift({id:gId(),date:today,type:'retard',title:`Cotisation en retard — ${mem.nom} ${mem.prenom}`,solId:h.solId,handId:h.id,memberId:h.memberId,read:false});
+      }
+    }
+  });
+  svDB(db);updABdg();
+}
+function rRetards(){
+  const db=getDB();const tb=g('tRet');const today=new Date().toISOString().slice(0,10);
+  const late=db.hands.filter(h=>h.scheduledDate&&h.scheduledDate<today&&h.status!=='distributed');
+  if(!late.length){tb.innerHTML=`<tr><td colspan="6"><div class="empty"><i class="fas fa-check-circle" style="color:var(--green)"></i><p>Aucun retard — Tout est à jour ✓</p></div></td></tr>`;return;}
+  tb.innerHTML=late.map(h=>{
+    const mem=db.members.find(m=>m.id===h.memberId);const sol=db.sols.find(s=>s.id===h.solId);
+    const days=Math.floor((new Date()-new Date(h.scheduledDate))/86400000);
+    return`<tr>
+      <td><strong>${mem?`${mem.nom} ${mem.prenom}`:'—'}</strong></td>
+      <td>${sol?sol.name:'—'}</td><td>${fd(h.scheduledDate)}</td>
+      <td style="color:var(--red);font-weight:700">${fmt(h.grossAmount,sol?.currency)}</td>
+      <td><span class="bdg bdg-r">${days} j</span></td>
+      <td><div class="ag">
+        <button class="bi ok" onclick="resRet('${h.id}')" title="Résolu"><i class="fas fa-check"></i></button>
+        <button class="bi see" onclick="vwMem('${h.memberId}')" title="Voir membre"><i class="fas fa-eye"></i></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function resRet(hid){
+  const db=getDB();db.alerts=db.alerts.filter(a=>a.handId!==hid);svDB(db);toast('Retard résolu');updABdg();rRetards();
+}
+
+// ══════════════════════════════════════════════
+// ABANDONS CRUD
+// ══════════════════════════════════════════════
+function calcAb(){
+  const memId=v('fAbMem');if(!memId){g('abCalc').style.display='none';return;}
+  const db=getDB();const mem=db.members.find(m=>m.id===memId);const sol=mem?db.sols.find(s=>s.id===mem.solId):null;
+  const pays=db.payments.filter(p=>p.memberId===memId);const nP=pays.length;const tP=pays.reduce((t,p)=>t+parseFloat(p.amount||0),0);
+  const dists=db.distributions.filter(d=>d.memberId===memId);const nR=dists.length;const vR=dists.reduce((t,d)=>t+parseFloat(d.netAmount||0),0);
+  const diff=tP-vR;const sit=Math.abs(diff)<0.01?'nul':diff>0?'créditeur':'débiteur';
+  g('abNP').textContent=nP+' paiement(s)';g('abTP').textContent=fmt(tP,sol?.currency);
+  g('abMR').textContent=nR+' main(s)';g('abVR').textContent=fmt(vR,sol?.currency);
+  const se=g('abSit');
+  if(sit==='créditeur')se.innerHTML=`✅ Créditeur — À rembourser: <strong>${fmt(diff,sol?.currency)}</strong>`;
+  else if(sit==='débiteur')se.innerHTML=`🔴 Débiteur — Reste à payer: <strong>${fmt(Math.abs(diff),sol?.currency)}</strong>`;
+  else se.innerHTML='⚖️ Solde nul';
+  se.style.color=sit==='créditeur'?'var(--green)':sit==='débiteur'?'var(--red)':'var(--muted)';
+  g('abCalc').style.display='block';
+  return{nP,tP,nR,vR,sit,bal:Math.abs(diff)};
+}
+function rAbans(){
+  const db=getDB();const tb=g('tAban');
+  if(!db.abandonments.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty"><i class="fas fa-user-minus"></i><p>Aucun abandon enregistré</p></div></td></tr>`;return;}
+  tb.innerHTML=db.abandonments.map(a=>{
+    const mem=db.members.find(m=>m.id===a.memberId);const sol=db.sols.find(s=>s.id===a.solId);
+    return`<tr>
+      <td><strong>${mem?`${mem.nom} ${mem.prenom}`:'—'}</strong></td>
+      <td>${sol?sol.name:'—'}</td><td>${fd(a.date)}</td>
+      <td>${a.reason||a.motif||'—'}</td><td>${bdg(a.situation||'nul')}</td>
+      <td style="color:${a.situation==='créditeur'?'var(--green)':a.situation==='débiteur'?'var(--red)':'var(--muted)'};font-weight:700">${a.balance?fmt(a.balance,sol?.currency):'—'}</td>
+      <td><div class="ag">
+        <button class="bi see" onclick="vwAb('${a.id}')" title="Voir"><i class="fas fa-eye"></i></button>
+        <button class="bi edit" onclick="edAb('${a.id}')" title="Modifier"><i class="fas fa-pen"></i></button>
+        <button class="bi del" onclick="dlAb('${a.id}')" title="Supprimer"><i class="fas fa-trash"></i></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function saveAb(){
+  const id=v('fAbId');const memId=v('fAbMem');const date=v('fAbDt');
+  if(!memId||!date){toast('Membre et date obligatoires','error');return;}
+  const db=getDB();const mem=db.members.find(m=>m.id===memId);const calc=calcAb();
+  const data={memberId:memId,solId:mem?.solId,date,reason:v('fAbMt'),motif:v('fAbMt'),
+    paidCount:calc?.nP||0,totalPaid:calc?.tP||0,handsReceived:calc?.nR||0,receivedValue:calc?.vR||0,
+    situation:calc?.sit||'nul',balance:calc?.bal||0,observations:v('fAbOb')};
+  if(id){const i=db.abandonments.findIndex(a=>a.id===id);if(i>=0)db.abandonments[i]={...db.abandonments[i],...data,updatedAt:ts()};lg('Modification','Abandons','Abandon modifié');toast('Abandon modifié');}
+  else{db.abandonments.push({id:gId(),...data,createdAt:ts()});
+    const mi=db.members.findIndex(m=>m.id===memId);if(mi>=0){db.members[mi].statut='abandonné';db.members[mi].abandonDate=date;db.members[mi].abandonMotif=v('fAbMt');}
+    adAlert('warning',`Abandon — ${mem?.nom}: ${calc?.sit||'nul'}`,mem?.solId);
+    lg('Création','Abandons',`${mem?.nom} abandonne — ${calc?.sit}`);toast('Abandon enregistré');}
+  svDB(db);cM('abandon');rAbans();
+}
+function edAb(id){
+  const db=getDB();const a=db.abandonments.find(x=>x.id===id);if(!a)return;
+  popSel('fAbMem','members');sv('fAbId',a.id);sv('fAbDt',a.date||'');sv('fAbMem',a.memberId);sv('fAbMt',a.reason||a.motif||'');sv('fAbOb',a.observations||'');
+  g('tAban').textContent='Modifier abandon';g('moAbandon').classList.add('show');setTimeout(calcAb,50);
+}
+function dlAb(id){
+  cfmDel('Supprimer cet enregistrement d\'abandon ?',()=>{const db=getDB();db.abandonments=db.abandonments.filter(a=>a.id!==id);svDB(db);lg('Suppression','Abandons','Abandon supprimé');toast('Supprimé','warning');rAbans();});
+}
+function vwAb(id){
+  const db=getDB();const a=db.abandonments.find(x=>x.id===id);if(!a)return;
+  const mem=db.members.find(m=>m.id===a.memberId);const sol=db.sols.find(s=>s.id===a.solId);
+  const sc=a.situation==='créditeur'?'var(--green)':a.situation==='débiteur'?'var(--red)':'var(--muted)';
+  showDet(`Situation — ${mem?.nom} ${mem?.prenom}`,`
+    <div class="drow"><span class="dlbl">Sòl</span><span class="dval">${sol?.name||'—'}</span></div>
+    <div class="drow"><span class="dlbl">Date abandon</span><span class="dval">${fd(a.date)}</span></div>
+    <div class="drow"><span class="dlbl">Motif</span><span class="dval">${a.reason||'—'}</span></div>
+    <div class="drow"><span class="dlbl">Paiements effectués</span><span class="dval">${a.paidCount||0}</span></div>
+    <div class="drow"><span class="dlbl">Total cotisé</span><span class="dval">${fmt(a.totalPaid||0,sol?.currency)}</span></div>
+    <div class="drow"><span class="dlbl">Mains reçues</span><span class="dval">${a.handsReceived||0}</span></div>
+    <div class="drow"><span class="dlbl">Valeur reçue</span><span class="dval">${fmt(a.receivedValue||0,sol?.currency)}</span></div>
+    <div class="drow"><span class="dlbl">Situation</span><span class="dval" style="color:${sc};font-weight:800">${bdg(a.situation||'nul')}</span></div>
+    <div class="drow"><span class="dlbl">${a.situation==='créditeur'?'À rembourser':a.situation==='débiteur'?'Reste à payer':'Solde'}</span>
+      <span class="dval" style="color:${sc};font-weight:800">${fmt(a.balance||0,sol?.currency)}</span></div>`);
+}
+
+// ══════════════════════════════════════════════
+// BÉNÉFICIAIRES
+// ══════════════════════════════════════════════
+function rBen(){
+  const db=getDB();const tb=g('tBen');
+  if(!db.distributions.length){tb.innerHTML=`<tr><td colspan="11"><div class="empty"><i class="fas fa-user-check"></i><p>Aucun bénéficiaire enregistré</p></div></td></tr>`;return;}
+  tb.innerHTML=db.distributions.map(d=>{
+    const mem=db.members.find(m=>m.id===d.memberId);const sol=db.sols.find(s=>s.id===d.solId);
+    return`<tr>
+      <td><strong>${mem?`${mem.nom} ${mem.prenom}`:'—'}</strong></td>
+      <td>${sol?sol.name:'—'}</td><td>${d.positions?d.positions.join(', '):'—'}</td>
+      <td>${d.handsCount||1}</td><td>${fd(d.date)}</td>
+      <td>${fmt(d.grossAmount,sol?.currency)}</td>
+      <td style="color:var(--red)">−${fmt(d.headFee||0,sol?.currency)}</td>
+      <td style="color:var(--green);font-weight:700">${fmt(d.netAmount,sol?.currency)}</td>
+      <td>${d.mode||'—'}</td><td>${d.responsable||'—'}</td>
+      <td><div class="ag">
+        <button class="bi see" onclick="vwDs('${d.id}')" title="Voir"><i class="fas fa-eye"></i></button>
+        <button class="bi edit" onclick="edDs('${d.id}')" title="Modifier"><i class="fas fa-pen"></i></button>
+        <button class="bi del" onclick="dlDs('${d.id}')" title="Supprimer"><i class="fas fa-trash"></i></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// ALERTES
+// ══════════════════════════════════════════════
+function rAlertes(){
+  const db=getDB();const container=g('aList');
+  if(!db.alerts.length){container.innerHTML='<div class="card"><p style="text-align:center;color:var(--muted2);padding:2rem;font-size:.8rem">Aucune alerte</p></div>';return;}
+  container.innerHTML=db.alerts.map(a=>`<div class="ai t${a.type?a.type.charAt(0):'i'} ${a.read?'read':'unread'}">
+    <i class="fas fa-${a.type==='retard'?'clock':a.type==='success'?'check-circle':a.type==='warning'?'exclamation-triangle':'info-circle'} ai-ic"
+       style="color:${a.type==='retard'||a.type==='danger'?'var(--red)':a.type==='success'?'var(--green)':a.type==='warning'?'var(--orange)':'var(--blue)'}"></i>
+    <div style="flex:1"><div class="ai-msg">${a.title}</div><div class="ai-dt">${fdt(a.date)}</div></div>
+    <div class="ai-ac">
+      ${!a.read?`<button class="bi ok" onclick="markRd('${a.id}')" title="Lu"><i class="fas fa-check"></i></button>`:''}
+      <button class="bi del" onclick="dlAl('${a.id}')" title="Supprimer"><i class="fas fa-trash"></i></button>
+    </div>
+  </div>`).join('');
+}
+function markRd(id){const db=getDB();const a=db.alerts.find(x=>x.id===id);if(a)a.read=true;svDB(db);rAlertes();updABdg();}
+function markAll(){const db=getDB();db.alerts.forEach(a=>a.read=true);svDB(db);rAlertes();updABdg();toast('Alertes marquées comme lues');}
+function dlAl(id){const db=getDB();db.alerts=db.alerts.filter(a=>a.id!==id);svDB(db);rAlertes();updABdg();}
+
+// ══════════════════════════════════════════════
+// HISTORIQUE
+// ══════════════════════════════════════════════
+function rHist(){
+  const db=getDB();const tb=g('tHist');
+  if(!db.activities.length){tb.innerHTML=`<tr><td colspan="6"><div class="empty"><i class="fas fa-history"></i><p>Aucune activité enregistrée</p></div></td></tr>`;return;}
+  tb.innerHTML=db.activities.map(a=>`<tr>
+    <td style="font-size:.69rem;white-space:nowrap">${fdt(a.date)}</td>
+    <td>${bdg(a.action==='Création'?'actif':a.action==='Suppression'?'abandonné':'funded')} <span style="font-size:.74rem">${a.action}</span></td>
+    <td>${a.module}</td><td style="font-size:.74rem;color:var(--muted)">${a.detail}</td>
+    <td>${a.actor||'—'}</td>
+    <td><div class="ag">
+      <button class="bi del" onclick="dlHist('${a.id}')" title="Supprimer"><i class="fas fa-trash"></i></button>
+    </div></td>
+  </tr>`).join('');
+}
+function dlHist(id){const db=getDB();db.activities=db.activities.filter(a=>a.id!==id);svDB(db);rHist();}
+
+// ══════════════════════════════════════════════
+// RECHERCHE
+// ══════════════════════════════════════════════
+let sCat='tous';
+function setSCat(c,btn){sCat=c;document.querySelectorAll('#recherche .tab').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');doSearch();}
+function doSearch(){
+  const q=(v('gSQ')||'').toLowerCase().trim();const ctr=g('sRes');
+  if(!q){ctr.innerHTML='<p style="text-align:center;color:var(--muted2);padding:2rem;font-size:.8rem">Saisissez un terme pour rechercher…</p>';return;}
+  const db=getDB();let res=[];
+  if(sCat==='tous'||sCat==='membres')db.members.filter(m=>`${m.nom} ${m.prenom} ${m.telephone||''} ${m.profession||''}`.toLowerCase().includes(q)).forEach(m=>{const sol=db.sols.find(s=>s.id===m.solId);res.push({type:'Membre',icon:'fa-user',label:`${m.nom} ${m.prenom}`,sub:`${sol?.name||'—'} · ${m.telephone||''}`,st:m.statut||'actif'});});
+  if(sCat==='tous'||sCat==='paiements')db.payments.filter(p=>{const m=db.members.find(x=>x.id===p.memberId);return(`${m?.nom} ${m?.prenom} ${p.amount}`).toLowerCase().includes(q);}).forEach(p=>{const m=db.members.find(x=>x.id===p.memberId);res.push({type:'Paiement',icon:'fa-money-bill',label:`${m?.nom} ${m?.prenom}: ${fmt(p.amount)}`,sub:fd(p.date),st:'paid'});});
+  if(sCat==='tous'||sCat==='prets')db.loans.filter(l=>{const m=db.members.find(x=>x.id===l.memberId);return(`${m?.nom} ${m?.prenom} ${l.amount} ${l.reason||''}`).toLowerCase().includes(q);}).forEach(l=>{const m=db.members.find(x=>x.id===l.memberId);res.push({type:'Prêt',icon:'fa-hand-holding-usd',label:`${m?.nom}: ${fmt(l.amount)}`,sub:l.reason||'',st:l.status||'actif'});});
+  if(sCat==='tous'||sCat==='distributions')db.distributions.filter(d=>{const m=db.members.find(x=>x.id===d.memberId);return(`${m?.nom} ${m?.prenom} ${d.netAmount}`).toLowerCase().includes(q);}).forEach(d=>{const m=db.members.find(x=>x.id===d.memberId);res.push({type:'Distribution',icon:'fa-share-from-square',label:`${m?.nom}: ${fmt(d.netAmount)}`,sub:fd(d.date),st:'distributed'});});
+  if(!res.length){ctr.innerHTML='<div class="card"><p style="text-align:center;color:var(--muted2);padding:2rem;font-size:.8rem">Aucun résultat trouvé</p></div>';return;}
+  ctr.innerHTML=`<p style="font-size:.72rem;color:var(--muted);margin-bottom:8px">${res.length} résultat(s)</p><div class="card">`+
+    res.map(r=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--soft)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <i class="fas ${r.icon}" style="color:var(--blue);width:16px;text-align:center"></i>
+        <div><div style="font-size:.79rem;font-weight:600">${r.label}</div><div style="font-size:.67rem;color:var(--muted2)">${r.type} · ${r.sub}</div></div>
+      </div>${bdg(r.st)}</div>`).join('')+'</div>';
+}
+
+// ══════════════════════════════════════════════
+// RAPPORTS
+// ══════════════════════════════════════════════
+function ldRap(){
+  const db=getDB();const sel=g('rSol');
+  if(sel)sel.innerHTML='<option value="">Tous les Sòl</option>'+db.sols.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+}
+function genR(){
+  const type=v('rType');const solId=v('rSol');const d1=v('rD1');const d2=v('rD2');
+  const db=getDB();const sol=db.sols.find(s=>s.id===solId);const cur=sol?.currency||'USD';
+  let rows=[],hdrs=[],title='';
+  if(type==='membres'||type==='complet'){
+    title='Rapport Membres';hdrs=['Nom','Prénom','Téléphone','Sòl','Profession','Statut'];
+    let data=db.members;if(solId)data=data.filter(m=>m.solId===solId);
+    rows=data.map(m=>[m.nom,m.prenom||'',m.telephone||'—',sn(m.solId,db),m.profession||'—',m.statut||'actif']);
+  }else if(type==='paiements'){
+    title='Rapport Paiements';hdrs=['Date','Membre','Attendu','Payé','Différence','Mode'];
+    let data=db.payments;if(solId)data=data.filter(p=>p.solId===solId);if(d1)data=data.filter(p=>p.date>=d1);if(d2)data=data.filter(p=>p.date<=d2);
+    rows=data.map(p=>{const m=db.members.find(x=>x.id===p.memberId);const diff=parseFloat(p.amount||0)-parseFloat(p.expectedAmount||0);return[fd(p.date),`${m?.nom} ${m?.prenom}`,fmt(p.expectedAmount,cur),fmt(p.amount,cur),(diff>=0?'+':'')+fmt(diff,cur),p.mode||'—'];});
+  }else if(type==='distributions'){
+    title='Rapport Distributions / Bénéficiaires';hdrs=['Date','Membre','Positions','Nb','Brut','Tèt Kaye','Net','Mode','Responsable'];
+    let data=db.distributions;if(solId)data=data.filter(d=>d.solId===solId);
+    rows=data.map(d=>{const m=db.members.find(x=>x.id===d.memberId);return[fd(d.date),`${m?.nom} ${m?.prenom}`,d.positions?.join(',')||'—',d.handsCount||1,fmt(d.grossAmount,cur),fmt(d.headFee||0,cur),fmt(d.netAmount,cur),d.mode||'—',d.responsable||'—'];});
+  }else if(type==='prets'){
+    title='Rapport Prêts';hdrs=['Date','Membre','Montant','Motif','Remboursé','Restant','Échéance','Statut'];
+    let data=db.loans;if(solId)data=data.filter(l=>l.solId===solId);
+    rows=data.map(l=>{const m=db.members.find(x=>x.id===l.memberId);const remb=db.repayments.filter(r=>r.loanId===l.id).reduce((t,r)=>t+parseFloat(r.amount||0),0);return[fd(l.date),`${m?.nom} ${m?.prenom}`,fmt(l.amount,cur),l.reason||'—',fmt(remb,cur),fmt(Math.max(0,l.amount-remb),cur),fd(l.dueDate),l.status||'actif'];});
+  }else if(type==='retards'){
+    title='Rapport Retards';hdrs=['Membre','Sòl','Date prévue','Montant dû','Jours'];
+    const today=new Date().toISOString().slice(0,10);
+    rows=db.hands.filter(h=>h.scheduledDate&&h.scheduledDate<today&&h.status!=='distributed').map(h=>{const m=db.members.find(x=>x.id===h.memberId);const s=db.sols.find(x=>x.id===h.solId);const days=Math.floor((new Date()-new Date(h.scheduledDate))/86400000);return[`${m?.nom} ${m?.prenom}`,s?.name||'—',fd(h.scheduledDate),fmt(h.grossAmount,cur),days+' j'];});
+  }else if(type==='abandons'){
+    title='Rapport Abandons';hdrs=['Membre','Sòl','Date','Motif','Situation','Solde'];
+    let data=db.abandonments;if(solId)data=data.filter(a=>a.solId===solId);
+    rows=data.map(a=>{const m=db.members.find(x=>x.id===a.memberId);const s=db.sols.find(x=>x.id===a.solId);return[`${m?.nom} ${m?.prenom}`,s?.name||'—',fd(a.date),a.reason||'—',a.situation||'nul',fmt(a.balance||0,cur)];});
+  }
+  if(!rows.length){toast('Aucune donnée à afficher','warning');return;}
+  lg('Création','Rapports',`${title}${sol?' — '+sol.name:''}`);
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
+  <style>body{font-family:Arial,sans-serif;padding:28px;color:#1a2533}
+    .logo{font-size:1.3rem;font-weight:800;color:#0b1f33;margin-bottom:4px}
+    .meta{color:#6e7d8a;font-size:.8rem;margin-bottom:18px}
+    h2{color:#0b1f33;font-size:1rem;margin-bottom:14px;border-bottom:3px solid #0aa37f;padding-bottom:7px}
+    table{width:100%;border-collapse:collapse}
+    th{background:#0b1f33;color:#fff;padding:7px;text-align:left;font-size:.72rem;text-transform:uppercase}
+    td{padding:6px 8px;border-bottom:1px solid #e4e9ed;font-size:.78rem}
+    tr:nth-child(even)td{background:#f8fafb}
+    .foot{margin-top:28px;text-align:center;color:#98a4af;font-size:.7rem;border-top:1px solid #e4e9ed;padding-top:10px}
+    @media print{.nop{display:none}}</style></head><body>
+  <div class="nop" style="margin-bottom:18px"><button onclick="window.print()" style="background:#0b1f33;color:#fff;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-size:.78rem">🖨️ Imprimer</button></div>
+  <div class="logo">💰 Evens-Motivation-Sòl</div>
+  <div class="meta">Rapport : <strong>${title}</strong>${sol?' | Sòl: '+sol.name:''} | Généré le : ${new Date().toLocaleString('fr-FR')}</div>
+  <h2>${title}</h2>
+  <table><thead><tr>${hdrs.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+  <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>
+  <div class="foot">Evens-Motivation-Sòl — ${rows.length} enregistrement(s) — ${new Date().getFullYear()}</div>
+  <script>window.onload=()=>window.print();<\/script></body></html>`);
+  w.document.close();toast('Rapport généré');
+}
+
+// ══════════════════════════════════════════════
+// PARAMÈTRES
+// ══════════════════════════════════════════════
+function ldP(){const db=getDB();const p=db.parametres||{};sv('pDev',p.devise||'USD');sv('pTK',p.tk||10);sv('pMP',p.minPay||3);sv('pMX',p.maxPretPct||50);}
+function saveP(){
+  const db=getDB();db.parametres={devise:v('pDev'),tk:parseFloat(v('pTK'))||10,minPay:parseInt(v('pMP'))||3,maxPretPct:parseInt(v('pMX'))||50};
+  svDB(db);toast('Paramètres enregistrés');lg('Modification','Paramètres','Paramètres mis à jour');
+}
+function expDB(){
+  const db=getDB();const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download=`ems-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(url);toast('Données exportées');
+}
+function rstDB(){
+  if(!confirm('⚠️ ATTENTION : Réinitialiser TOUTES les données ? Action irréversible !'))return;
+  localStorage.removeItem(KEY);toast('Données réinitialisées','warning');setTimeout(()=>location.reload(),1200);
+}
+
+// ══════════════════════════════════════════════
+// SÉCURITÉ / UTILISATEURS CRUD
+// ══════════════════════════════════════════════
+function rUsers(){
+  const db=getDB();const tb=g('tUsers');
+  tb.innerHTML=db.utilisateurs.map(u=>`<tr>
+    <td><strong>${u.nom}</strong></td><td>${u.login}</td>
+    <td>${bdg(u.role)}</td><td>${bdg(u.statut||'actif')}</td>
+    <td><div class="ag">
+      <button class="bi edit" onclick="edUs('${u.id}')" title="Modifier"><i class="fas fa-pen"></i></button>
+      <button class="bi del" onclick="dlUs('${u.id}')" title="Supprimer"><i class="fas fa-trash"></i></button>
+    </div></td>
+  </tr>`).join('');
+}
+function rAudit(){
+  const db=getDB();const tb=g('tAudit');
+  if(!db.audit.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--muted2);padding:1rem;font-size:.78rem">Aucune entrée d\'audit</td></tr>';return;}
+  tb.innerHTML=db.audit.slice(0,30).map(a=>`<tr>
+    <td style="font-size:.69rem">${fdt(a.date)}</td><td>${a.user}</td><td>${a.action}</td>
+    <td><div class="ag"><button class="bi del" onclick="dlAudit('${a.id}')" title="Supprimer"><i class="fas fa-trash"></i></button></div></td>
+  </tr>`).join('');
+}
+function saveUs(){
+  const id=v('fUsId');const nom=v('fUsNm').trim();const login=v('fUsLg').trim();const mdp=v('fUsMd');
+  if(!nom||!login){toast('Nom et identifiant obligatoires','error');return;}
+  const db=getDB();
+  if(id){const i=db.utilisateurs.findIndex(u=>u.id===id);if(i>=0){db.utilisateurs[i]={...db.utilisateurs[i],nom,login,role:v('fUsRl'),statut:v('fUsSt')};if(mdp)db.utilisateurs[i].mdp=mdp;}toast('Utilisateur modifié');}
+  else{if(!mdp){toast('Mot de passe obligatoire','error');return;}db.utilisateurs.push({id:gId(),nom,login,mdp,role:v('fUsRl'),statut:v('fUsSt')||'actif',createdAt:ts()});toast('Utilisateur créé');}
+  svDB(db);cM('utilisateur');rUsers();
+}
+function edUs(id){
+  const db=getDB();const u=db.utilisateurs.find(x=>x.id===id);if(!u)return;
+  sv('fUsId',u.id);sv('fUsNm',u.nom);sv('fUsLg',u.login);sv('fUsMd','');sv('fUsRl',u.role||'caissier');sv('fUsSt',u.statut||'actif');
+  g('tUser').textContent='Modifier utilisateur';g('moUtilisateur').classList.add('show');
+}
+function dlUs(id){
+  if(id==='u1'){toast('Impossible de supprimer l\'administrateur principal','error');return;}
+  const db=getDB();const u=db.utilisateurs.find(x=>x.id===id);
+  cfmDel(`Supprimer "${u?.nom}" ?`,()=>{const db2=getDB();db2.utilisateurs=db2.utilisateurs.filter(x=>x.id!==id);svDB(db2);toast('Supprimé','warning');rUsers();});
+}
+function dlAudit(id){const db=getDB();db.audit=db.audit.filter(a=>a.id!==id);svDB(db);rAudit();}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+async function initApp(){
+  try{
+    // Charger les données (Firebase ou localStorage)
+    await loadFromFS();
+    const db=getDB();
+    if(!db.utilisateurs)db.utilisateurs=[{id:'u1',nom:'Administrateur',login:'admin',mdp:'admin123',role:'admin',statut:'actif',createdAt:ts()}];
+    if(!db.parametres)db.parametres={devise:'USD',tk:10,minPay:3,maxPretPct:50};
+    if(!db.repayments)db.repayments=[];
+    if(!db.abandonments)db.abandonments=[];
+    if(!db.audit)db.audit=[];
+    svDB(db);
+  }catch(e){
+    // Firebase a échoué → utiliser localStorage comme fallback
+    console.warn('initApp erreur:',e.message);
+    if(!_memDB) _memDB=getLocalDB();
+    setSS('offline');
+  }finally{
+    // ← TOUJOURS exécuté — l'app s'affiche dans tous les cas
+    g('app').style.display='block';
+    const lo=g('loadOverlay');
+    if(lo) lo.style.display='none';
+    try{
+      updSBSol();updABdg();detectRet();rDash();
+      adAudit('Accès tableau de bord');
+    }catch(e2){
+      console.warn('Render erreur:',e2.message);
+    }
+  }
+}
+
+// — Démarrage : initialiser Firebase puis afficher le login —
+(function(){
+  initFirebase();
+  // Cacher le loading overlay → montrer l'écran de login
+  const lo=g('loadOverlay');
+  if(lo) lo.style.display='none';
+})()
+</script>
+</body>
+</html>
